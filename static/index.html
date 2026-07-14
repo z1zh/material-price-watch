@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>材料价格通 — 工业原材料实时行情与深度分析</title>
+<script>
+// Early theme init to prevent FOUC
+(function(){
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.classList.remove('dark');
+    }
+  } catch(e) {}
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+  :root {
+    --bg-primary: #09090b;
+    --bg-secondary: #18181b;
+    --bg-card: #1c1c21;
+    --bg-card-hover: #232329;
+    --border: #27272a;
+    --border-subtle: #1e1e22;
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --accent-green: #22c55e;
+    --accent-red: #ef4444;
+    --accent-amber: #f59e0b;
+    --accent-blue: #3b82f6;
+    --accent-purple: #a855f7;
+    --accent-cyan: #06b6d4;
+    --accent-rose: #f43f5e;
+    --accent-emerald: #10b981;
+    --accent-indigo: #6366f1;
+    --accent-orange: #f97316;
+    --accent-teal: #14b8a6;
+    --glow-green: rgba(34, 197, 94, 0.12);
+    --glow-red: rgba(239, 68, 68, 0.12);
+  }
+
+  /* ===== LIGHT THEME (commoditywatch.net original style) ===== */
+  [data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent-green: #16a34a;
+    --accent-red: #dc2626;
+    --accent-amber: #d97706;
+    --accent-blue: #2563eb;
+    --accent-purple: #7c3aed;
+    --accent-cyan: #0891b2;
+    --accent-rose: #e11d48;
+    --accent-emerald: #059669;
+    --accent-indigo: #4f46e5;
+    --accent-orange: #ea580c;
+    --accent-teal: #0d9488;
+    --glow-green: rgba(22, 163, 74, 0.1);
+    --glow-red: rgba(220, 38, 38, 0.1);
+  }
+
+  [data-theme="light"] body {
+    background: #ffffff;
+    color: #0f172a;
+  }
+
+  [data-theme="light"] .site-header {
+    background: rgba(255, 255, 255, 0.88);
+    border-bottom-color: #e2e8f0;
+  }
+
+  [data-theme="light"] .tabs-wrapper {
+    background: rgba(255, 255, 255, 0.9);
+    border-bottom-color: #e2e8f0;
+  }
+
+  [data-theme="light"] .hero::before {
+    background: radial-gradient(ellipse, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+  }
+
+  [data-theme="light"] .commodity-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  [data-theme="light"] .commodity-card:hover {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+    border-color: #cbd5e1;
+  }
+
+  [data-theme="light"] .strip-item {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  [data-theme="light"] .news-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  [data-theme="light"] .site-footer {
+    background: #f8fafc;
+    border-top-color: #e2e8f0;
+  }
+
+  [data-theme="light"] .search-modal {
+    background: #ffffff;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+  }
+
+  [data-theme="light"] .search-overlay {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="light"] .tab-pill.active {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: #e2e8f0;
+  }
+
+  [data-theme="light"] .toggle-btn.active {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  [data-theme="light"] .search-trigger {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: #e2e8f0;
+  }
+
+  [data-theme="light"] .lang-toggle,
+  [data-theme="light"] .theme-toggle {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: #e2e8f0;
+  }
+
+  [data-theme="light"] ::-webkit-scrollbar-track { background: #f8fafc; }
+  [data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+  [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  [data-theme="light"] html {
+    scrollbar-color: #cbd5e1 #ffffff;
+  }
+
+  /* Theme transition */
+  body, .site-header, .tabs-wrapper, .commodity-card, .strip-item, .news-card, .site-footer,
+  .search-modal, .search-trigger, .lang-toggle, .theme-toggle, .tab-pill {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #27272a #09090b;
+  }
+
+  body {
+    font-family: 'DM Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+  /* ===== HEADER ===== */
+  .site-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(9, 9, 11, 0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-inner {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo-group { display: flex; align-items: center; gap: 10px; }
+
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; }
+
+  .logo-text {
+    font-weight: 700; font-size: 18px; letter-spacing: -0.5px;
+    color: var(--text-primary);
+  }
+
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+
+  .nav-links a {
+    padding: 7px 14px; border-radius: 7px; font-size: 14px;
+    font-weight: 500; color: var(--text-secondary);
+    text-decoration: none; transition: all 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+  .nav-links a.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+
+  .search-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+
+  .search-trigger:hover { border-color: #3f3f46; color: var(--text-secondary); }
+
+  .search-trigger kbd {
+    font-family: inherit; font-size: 11px;
+    padding: 1px 5px; border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+  }
+
+  .lang-toggle {
+    padding: 7px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 13px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+  }
+
+  .lang-toggle:hover { border-color: #3f3f46; color: var(--text-primary); }
+
+  /* ===== HERO ===== */
+  .hero {
+    text-align: center; padding: 72px 24px 32px;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 16px; border-radius: 100px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: var(--accent-green); font-size: 13px;
+    font-weight: 600; margin-bottom: 24px;
+    animation: fadeInUp 0.6s ease;
+  }
+
+  .hero-badge .pulse {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 900; letter-spacing: -1.5px;
+    line-height: 1.1; margin-bottom: 16px;
+    animation: fadeInUp 0.6s ease 0.1s both;
+  }
+
+  .hero h1 .gradient-text {
+    background: linear-gradient(135deg, #f59e0b, #f97316, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 17px; color: var(--text-secondary);
+    max-width: 640px; margin: 0 auto 36px;
+    line-height: 1.7; font-weight: 400;
+    animation: fadeInUp 0.6s ease 0.2s both;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== STICKY TABS ===== */
+  .tabs-wrapper {
+    position: sticky; top: 64px; z-index: 90;
+    background: rgba(9, 9, 11, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+
+  .tabs-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; gap: 4px; overflow-x: auto;
+    scrollbar-width: none; padding: 10px 0;
+  }
+
+  .tabs-inner::-webkit-scrollbar { display: none; }
+
+  .tab-pill {
+    flex-shrink: 0; padding: 8px 18px; border-radius: 8px;
+    font-size: 13.5px; font-weight: 500;
+    color: var(--text-muted); background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer; transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab-pill:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+
+  .tab-pill.active {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.08);
+    border-color: var(--border);
+  }
+
+  .tab-pill .tab-icon { margin-right: 6px; }
+
+  /* ===== MARKET OVERVIEW STRIP ===== */
+  .market-strip {
+    max-width: 1280px; margin: 24px auto 0;
+    padding: 0 24px;
+  }
+
+  .strip-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .strip-item {
+    padding: 16px 20px; border-radius: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.25s;
+  }
+
+  .strip-item:hover { border-color: #3f3f46; background: var(--bg-card-hover); }
+
+  .strip-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .strip-value { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; margin-top: 2px; }
+  .strip-change { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .strip-change.up { color: var(--accent-green); }
+  .strip-change.down { color: var(--accent-red); }
+  .strip-change.flat { color: var(--text-muted); }
+
+  /* ===== CONTENT SECTIONS ===== */
+  .content-area { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+
+  .section-block { padding-top: 48px; }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .section-title-group { display: flex; align-items: center; gap: 12px; }
+
+  .section-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .section-title {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+  }
+
+  .section-desc {
+    font-size: 13px; color: var(--text-muted); margin-top: 2px;
+  }
+
+  .section-toggle {
+    display: flex; gap: 4px; background: rgba(255,255,255,0.04);
+    border-radius: 8px; padding: 3px;
+  }
+
+  .toggle-btn {
+    padding: 6px 14px; border-radius: 6px; font-size: 12.5px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+    background: transparent; border: none;
+    color: var(--text-muted);
+  }
+
+  .toggle-btn.active { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+  .toggle-btn:hover:not(.active) { color: var(--text-secondary); }
+
+  /* ===== COMMODITY CARDS ===== */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+
+  .commodity-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative; overflow: hidden;
+    cursor: default;
+  }
+
+  .commodity-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 14px 14px 0 0;
+    opacity: 0; transition: opacity 0.3s;
+  }
+
+  .commodity-card:hover {
+    border-color: #3f3f46;
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .commodity-card:hover::before { opacity: 1; }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+
+  .card-name-group { flex: 1; }
+
+  .card-name {
+    font-size: 17px; font-weight: 700; letter-spacing: -0.3px;
+    line-height: 1.3;
+  }
+
+  .card-name-en {
+    font-size: 12px; color: var(--text-muted); font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .card-unit {
+    font-size: 11px; color: var(--text-muted); font-weight: 500;
+    padding: 3px 8px; border-radius: 5px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-subtle);
+    white-space: nowrap;
+  }
+
+  .card-price-row {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .card-price {
+    font-size: 28px; font-weight: 800; letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card-change {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card-change.up { background: var(--glow-green); color: var(--accent-green); }
+  .card-change.down { background: var(--glow-red); color: var(--accent-red); }
+  .card-change.flat { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+
+  .card-meta {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    padding-top: 14px; border-top: 1px solid var(--border-subtle);
+  }
+
+  .meta-item {}
+  .meta-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+  .meta-value { font-size: 13.5px; font-weight: 600; margin-top: 2px; color: var(--text-secondary); }
+
+  .card-desc {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 13px; color: var(--text-muted);
+    line-height: 1.65;
+  }
+
+  /* Mini sparkline canvas */
+  .sparkline-wrap {
+    margin-top: 14px; height: 48px; position: relative;
+  }
+
+  .sparkline-wrap canvas {
+    width: 100%; height: 100%;
+  }
+
+  /* ===== MOVERS SECTION ===== */
+  .movers-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 24px;
+  }
+
+  .movers-badge {
+    padding: 4px 10px; border-radius: 6px; font-size: 12px;
+    font-weight: 600;
+  }
+
+  .movers-badge.gainer { background: var(--glow-green); color: var(--accent-green); }
+  .movers-badge.decliner { background: var(--glow-red); color: var(--accent-red); }
+
+  /* ===== MARKET NEWS ===== */
+  .news-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .news-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    transition: all 0.3s;
+  }
+
+  .news-card:hover {
+    border-color: #3f3f46;
+    transform: translateY(-1px);
+  }
+
+  .news-tag {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 5px; font-size: 11px;
+    font-weight: 600; margin-bottom: 12px;
+  }
+
+  .news-title {
+    font-size: 15px; font-weight: 600; line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .news-excerpt {
+    font-size: 13px; color: var(--text-muted); line-height: 1.65;
+  }
+
+  .news-time {
+    font-size: 11.5px; color: var(--text-muted);
+    margin-top: 12px; font-weight: 500;
+  }
+
+  /* ===== FOOTER ===== */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+    padding: 48px 24px 32px;
+  }
+
+  .footer-inner { max-width: 1280px; margin: 0 auto; }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(3, 1fr);
+    gap: 48px; margin-bottom: 40px;
+  }
+
+  .footer-brand-desc {
+    font-size: 13.5px; color: var(--text-muted);
+    line-height: 1.7; margin-top: 12px; max-width: 320px;
+  }
+
+  .footer-col-title {
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .footer-col a {
+    display: block; font-size: 13.5px; color: var(--text-muted);
+    text-decoration: none; padding: 4px 0; transition: color 0.2s;
+  }
+
+  .footer-col a:hover { color: var(--text-primary); }
+
+  .footer-bottom {
+    padding-top: 24px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  .footer-copy { font-size: 12.5px; color: var(--text-muted); }
+  .footer-disclaimer { font-size: 12px; color: var(--text-muted); opacity: 0.7; }
+
+  /* ===== SEARCH MODAL ===== */
+  .search-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: none; align-items: flex-start;
+    justify-content: center; padding-top: 120px;
+  }
+
+  .search-overlay.open { display: flex; }
+
+  .search-modal {
+    width: 560px; max-width: 90vw;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .search-input-wrap {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-input-wrap svg { color: var(--text-muted); flex-shrink: 0; }
+
+  .search-input {
+    flex: 1; background: none; border: none; outline: none;
+    font-size: 16px; color: var(--text-primary);
+    font-family: inherit;
+  }
+
+  .search-input::placeholder { color: var(--text-muted); }
+
+  .search-results {
+    max-height: 360px; overflow-y: auto; padding: 8px;
+  }
+
+  .search-result-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+  }
+
+  .search-result-item:hover { background: rgba(255,255,255,0.06); }
+
+  .search-result-name { font-size: 14px; font-weight: 500; }
+  .search-result-cat { font-size: 12px; color: var(--text-muted); }
+  .search-result-price { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .search-footer {
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 16px;
+    font-size: 11.5px; color: var(--text-muted);
+  }
+
+  .search-footer kbd {
+    font-family: inherit; font-size: 10.5px;
+    padding: 1px 5px; border-radius: 3px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .hero { padding: 48px 16px 24px; }
+    .header-inner { padding: 0 16px; }
+    .content-area { padding: 0 16px 60px; }
+    .strip-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .strip-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Utility: hidden */
+  .hidden { display: none !important; }
+
+  /* Smooth section reveal */
+  .reveal {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo-group">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+      </div>
+      <span class="logo-text" data-i18n="logoText">材料价格通</span>
+    </div>
+
+    <nav class="nav-links">
+      <a href="#movers" class="active" data-i18n="navMovers">涨跌榜</a>
+      <a href="#rare-earth" data-i18n="navRare">稀土系列</a>
+      <a href="#catalyst" data-i18n="navCatalyst">催化材料</a>
+      <a href="#metals" data-i18n="navMetals">有色金属</a>
+      <a href="#specialty" data-i18n="navSpecialty">特种材料</a>
+      <a href="#news" data-i18n="navNews">市场资讯</a>
+      <a href="/map" data-i18n="navMap" style="color:var(--accent-amber);font-weight:600;">🗺 全球矿业地图</a>
+    </nav>
+
+    <div class="header-actions">
+      <div id="connectionStatus" style="display:none;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);margin-right:8px;">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--text-muted);"></span>
+        <span style="font-size:12px;color:var(--text-muted);">连接中...</span>
+      </div>
+      <button onclick="refreshPrices()" style="padding:7px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-secondary);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;margin-right:8px;" title="刷新数据">
+        ↻ 刷新
+      </button>
+      <div class="search-trigger" onclick="openSearch()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span data-i18n="searchText">搜索</span>
+        <kbd>⌘K</kbd>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="切换主题 / Toggle Theme" style="padding:7px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-secondary);font-size:16px;cursor:pointer;transition:all 0.2s;margin-right:4px;line-height:1;">🌙</button>
+      <button class="lang-toggle" onclick="toggleLang()" id="langBtn">EN</button>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== SEARCH MODAL ==================== -->
+<div class="search-overlay" id="searchOverlay" onclick="closeSearchOutside(event)">
+  <div class="search-modal">
+    <div class="search-input-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="searchInput" type="text" placeholder="搜索材料名称..." data-placeholder-zh="搜索材料名称..." data-placeholder-en="Search material name..." oninput="filterSearch(this.value)">
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-footer">
+      <span><kbd>↑↓</kbd> <span data-i18n="searchNav">导航</span></span>
+      <span><kbd>↵</kbd> <span data-i18n="searchSelect">选择</span></span>
+      <span><kbd>ESC</kbd> <span data-i18n="searchClose">关闭</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="pulse"></span>
+    <span data-i18n="heroBadge">实时行情</span>
+  </div>
+  <h1>
+    <span data-i18n="heroTitle1">工业原材料</span><br>
+    <span class="gradient-text" data-i18n="heroTitle2">实时价格与深度分析</span>
+  </h1>
+  <p class="hero-sub" data-i18n="heroSub">追踪稀土、催化材料、有色金属等12+工业原材料实时价格，覆盖催化剂、冶金、化工等核心产业链。</p>
+</section>
+
+<!-- ==================== STICKY TABS ==================== -->
+<div class="tabs-wrapper">
+  <div class="tabs-inner">
+    <button class="tab-pill active" onclick="scrollToSection('movers')">
+      <span class="tab-icon">↑↓</span><span data-i18n="tabMovers">今日涨跌</span>
+    </button>
+    <button class="tab-pill" onclick="scrollToSection('rare-earth')">
+      <span class="tab-icon">◆</span><span data-i18n="tabRare">稀土系列</span>
+    </button>
+    <button class="tab-pill" onclick="scrollToSection('catalyst')">
+      <span class="tab-icon">⚗</span><span data-i18n="tabCatalyst">催化材料</span>
+    </button>
+    <button class="tab-pill" onclick="scrollToSection('metals')">
+      <span class="tab-icon">⬡</span><span data-i18n="tabMetals">有色金属</span>
+    </button>
+    <button class="tab-pill" onclick="scrollToSection('specialty')">
+      <span class="tab-icon">◇</span><span data-i18n="tabSpecialty">特种材料</span>
+    </button>
+    <button class="tab-pill" onclick="scrollToSection('news')">
+      <span class="tab-icon">◈</span><span data-i18n="tabNews">市场资讯</span>
+    </button>
+  </div>
+</div>
+
+<!-- ==================== MARKET OVERVIEW STRIP ==================== -->
+<div class="market-strip reveal">
+  <div class="strip-grid" id="stripGrid"></div>
+</div>
+
+<!-- ==================== CONTENT ==================== -->
+<main class="content-area">
+
+  <!-- ===== MOVERS ===== -->
+  <section class="section-block reveal" id="movers">
+    <div class="section-header">
+      <div class="section-title-group">
+        <div class="section-icon" style="background: rgba(34,197,94,0.1);">
+          <span>📈</span>
+        </div>
+        <div>
+          <div class="section-title" data-i18n="moversTitle">今日涨跌幅</div>
+          <div class="section-desc" data-i18n="moversDesc">按价格变动幅度排列的工业原材料</div>
+        </div>
+      </div>
+      <div class="section-toggle">
+        <button class="toggle-btn active" onclick="toggleMovers('gainers', this)" data-i18n="btnGainers">↑ 涨幅榜</button>
+        <button class="toggle-btn" onclick="toggleMovers('decliners', this)" data-i18n="btnDecliners">↓ 跌幅榜</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="moversGrid"></div>
+  </section>
+
+  <!-- ===== RARE EARTH ===== -->
+  <section class="section-block reveal" id="rare-earth">
+    <div class="section-header">
+      <div class="section-title-group">
+        <div class="section-icon" style="background: rgba(245,158,11,0.12);">
+          <span>◆</span>
+        </div>
+        <div>
+          <div class="section-title" data-i18n="rareTitle">稀土系列</div>
+          <div class="section-desc" data-i18n="rareDesc">镧系、铈系稀土氧化物及金属</div>
+        </div>
+      </div>
+    </div>
+    <div class="cards-grid" id="rareEarthGrid"></div>
+  </section>
+
+  <!-- ===== CATALYST ===== -->
+  <section class="section-block reveal" id="catalyst">
+    <div class="section-header">
+      <div class="section-title-group">
+        <div class="section-icon" style="background: rgba(59,130,246,0.12);">
+          <span>⚗</span>
+        </div>
+        <div>
+          <div class="section-title" data-i18n="catTitle">催化材料</div>
+          <div class="section-desc" data-i18n="catDesc">催化裂化、加氢及载体材料</div>
+        </div>
+      </div>
+    </div>
+    <div class="cards-grid" id="catalystGrid"></div>
+  </section>
+
+  <!-- ===== METALS ===== -->
+  <section class="section-block reveal" id="metals">
+    <div class="section-header">
+      <div class="section-title-group">
+        <div class="section-icon" style="background: rgba(168,85,247,0.12);">
+          <span>⬡</span>
+        </div>
+        <div>
+          <div class="section-title" data-i18n="metalTitle">有色金属</div>
+          <div class="section-desc" data-i18n="metalDesc">钼、钴、镍、钨等战略性金属</div>
+        </div>
+      </div>
+    </div>
+    <div class="cards-grid" id="metalsGrid"></div>
+  </section>
+
+  <!-- ===== SPECIALTY ===== -->
+  <section class="section-block reveal" id="specialty">
+    <div class="section-header">
+      <div class="section-title-group">
+        <div class="section-icon" style="background: rgba(6,182,212,0.12);">
+          <span>◇</span>
+        </div>
+        <div>
+          <div class="section-title" data-i18n="specTitle">特种材料</div>
+          <div class="section-desc" data-i18n="specDesc">茂金属催化剂、特种载体及化工原料</div>
+        </div>
+      </div>
+    </div>
+    <div class="cards-grid" id="specialtyGrid"></div>
+  </section>
+
+  <!-- ===== NEWS ===== -->
+  <section class="section-block reveal" id="news">
+    <div class="section-header">
+      <div class="section-title-group">
+        <div class="section-icon" style="background: rgba(244,63,94,0.1);">
+          <span>◈</span>
+        </div>
+        <div>
+          <div class="section-title" data-i18n="newsTitle">市场资讯</div>
+          <div class="section-desc" data-i18n="newsDesc">最新行业动态与市场分析</div>
+        </div>
+      </div>
+    </div>
+    <div class="news-grid" id="newsGrid"></div>
+  </section>
+
+</main>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="logo-group">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </div>
+          <span class="logo-text" data-i18n="logoText">材料价格通</span>
+        </div>
+        <p class="footer-brand-desc" data-i18n="footerDesc">专注于稀土、催化材料及有色金属的实时价格追踪与深度市场分析，为产业链企业提供决策参考。</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title" data-i18n="footerData">数据中心</div>
+        <a href="#rare-earth" data-i18n="navRare">稀土系列</a>
+        <a href="#catalyst" data-i18n="navCatalyst">催化材料</a>
+        <a href="#metals" data-i18n="navMetals">有色金属</a>
+        <a href="#specialty" data-i18n="navSpecialty">特种材料</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title" data-i18n="footerTools">分析工具</div>
+        <a href="#" data-i18n="footerCompare">价格对比</a>
+        <a href="#" data-i18n="footerHistory">历史趋势</a>
+        <a href="#" data-i18n="footerAlert">价格预警</a>
+        <a href="#" data-i18n="footerAPI">数据接口</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title" data-i18n="footerAbout">关于我们</div>
+        <a href="#" data-i18n="footerIntro">平台介绍</a>
+        <a href="#" data-i18n="footerContact">联系我们</a>
+        <a href="#" data-i18n="footerPrivacy">隐私政策</a>
+        <a href="#" data-i18n="footerTerms">使用条款</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 材料价格通 · <span data-i18n="footerRights">保留所有权利</span></span>
+      <span class="footer-disclaimer" data-i18n="footerDisclaimer">价格数据来源于公开市场信息（仅供参考，不构成投资建议）</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script>
+// ==================== REAL-TIME DATA INTEGRATION ====================
+
+// WebSocket连接（后端服务地址）
+const WS_URL = 'http://localhost:3333';
+const API_URL = 'http://localhost:3333/api';
+
+let socket = null;
+let isConnected = false;
+
+// 连接到WebSocket
+function connectWebSocket() {
+  if (socket && isConnected) return;
+
+  socket = io(WS_URL, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 5000,
+    reconnectionAttempts: 10
+  });
+
+  socket.on('connect', () => {
+    console.log('WebSocket connected');
+    isConnected = true;
+    updateConnectionStatus(true);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('WebSocket disconnected');
+    isConnected = false;
+    updateConnectionStatus(false);
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error('Connection error:', err.message);
+    // 回退到HTTP轮询
+    startPollingFallback();
+  });
+
+  // 接收初始价格数据
+  socket.on('prices:initial', (prices) => {
+    console.log('Received initial prices:', prices.length, 'items');
+    updateAllPrices(prices);
+  });
+
+  // 接收实时更新
+  socket.on('prices:updated', (data) => {
+    console.log('Price update received:', data.results.length, 'items');
+    updateAllPricesFromBackend();
+  });
+}
+
+// HTTP轮询回退（每5分钟）
+let pollInterval = null;
+
+function startPollingFallback() {
+  if (pollInterval) return;
+  
+  pollInterval = setInterval(() => {
+    updateAllPricesFromBackend();
+  }, 5 * 60 * 1000); // 5分钟
+
+  // 立即执行一次
+  updateAllPricesFromBackend();
+}
+
+// 从后端API获取最新价格
+async function updateAllPricesFromBackend() {
+  try {
+    const response = await fetch(`${API_URL}/prices`);
+    const result = await response.json();
+    
+    if (result.success) {
+      updateAllPrices(result.data);
+    }
+  } catch (error) {
+    console.error('Failed to fetch prices:', error.message);
+  }
+}
+
+// 更新所有价格显示
+function updateAllPrices(prices) {
+  if (!prices || prices.length === 0) return;
+
+  // 更新市场概览条
+  updateMarketStrip(prices);
+
+  // 更新涨跌榜
+  renderMoversFromData(prices, 'gainers');
+
+  // 更新各分类
+  updateCategoryCards('rare-earth', 'rareEarthGrid', prices);
+  updateCategoryCards('catalyst', 'catalystGrid', prices);
+  updateCategoryCards('metals', 'metalsGrid', prices);
+  updateCategoryCards('specialty', 'specialtyGrid', prices);
+
+  // 重新渲染所有卡片
+  renderAll();
+}
+
+// 更新市场概览条
+function updateMarketStrip(prices) {
+  const t = translations[currentLang];
+  const upCount = prices.filter(p => (p.change_percent || 0) > 0).length;
+  const downCount = prices.filter(p => (p.change_percent || 0) < 0).length;
+  const flatCount = prices.filter(p => (p.change_percent || 0) === 0).length;
+
+  document.getElementById('stripGrid').innerHTML = `
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripTotal}</div><div class="strip-value">${prices.length}</div></div>
+    </div>
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripUp}</div><div class="strip-value" style="color:var(--accent-green)">${upCount}</div></div>
+      <div class="strip-change up">▲</div>
+    </div>
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripDown}</div><div class="strip-value" style="color:var(--accent-red)">${downCount}</div></div>
+      <div class="strip-change down">▼</div>
+    </div>
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripFlat}</div><div class="strip-value" style="color:var(--text-muted)">${flatCount}</div></div>
+      <div class="strip-change flat">—</div>
+    </div>
+  `;
+}
+
+// 从后端数据渲染涨跌榜
+function renderMoversFromData(prices, type) {
+  const sorted = [...prices].sort((a, b) => {
+    return type === 'gainers' 
+      ? (b.change_percent || 0) - (a.change_percent || 0)
+      : (a.change_percent || 0) - (b.change_percent || 0);
+  });
+  
+  const grid = document.getElementById('moversGrid');
+  grid.innerHTML = prices.slice(0, 6).map(commodityFromDb => 
+    createCardFromDb(commodityFromDb)
+  ).join('');
+  
+  requestAnimationFrame(renderSparklines);
+}
+
+// 从数据库创建卡片
+function createCardFromDb(c) {
+  const lang = currentLang;
+  const name = lang === 'zh' ? c.material_name : c.material_name_en;
+  const unit = lang === 'zh' ? c.unit : 'CNY/t';
+  const priceDisp = c.price_display || c.price.toFixed(2);
+  const desc = lang === 'zh' ? c.description_zh : c.description_en;
+  const t = translations[lang];
+  const changeClass = c.change_percent > 0 ? 'up' : c.change_percent < 0 ? 'down' : 'flat';
+  const changeIcon = c.change_percent > 0 ? '▲' : c.change_percent < 0 ? '▼' : '—';
+  const changeStr = c.change_percent ? `${c.change_percent > 0 ? '+' : ''}${c.change_percent.toFixed(1)}%` : '—';
+
+  return `
+    <div class="commodity-card" data-id="${c.material_id}">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;background:${c.color};opacity:0.6;"></div>
+      <div class="card-top">
+        <div class="card-name-group">
+          <div class="card-name">${name}</div>
+          <div class="card-name-en">${lang === 'zh' ? c.material_name_en : c.formula}</div>
+        </div>
+        <div class="card-unit">${unit}</div>
+      </div>
+      <div class="card-price-row">
+        <div class="card-price" style="color:${c.color}">¥${priceDisp}</div>
+        <div class="card-change ${changeClass}">
+          ${changeIcon} ${changeStr}
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="meta-item">
+          <div class="meta-label">${t.metaHigh}</div>
+          <div class="meta-value">${c.high ? parseFloat(c.high).toFixed(2) : '—'}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">${t.metaLow}</div>
+          <div class="meta-value">${c.low ? parseFloat(c.low).toFixed(2) : '—'}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">${t.metaWeek}</div>
+          <div class="meta-value" style="color:${c.change_percent > 0 ? 'var(--accent-green)' : c.change_percent < 0 ? 'var(--accent-red)' : 'var(--text-secondary)'}">${changeStr}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">${t.metaFormula}</div>
+          <div class="meta-value">${c.formula || '—'}</div>
+        </div>
+      </div>
+      <div class="card-desc">${desc || '—'}</div>
+    </div>
+  `;
+}
+
+// 更新分类卡片
+function updateCategoryCards(category, gridId, prices) {
+  const filtered = prices.filter(p => p.category === category);
+  const grid = document.getElementById(gridId);
+  if (grid && filtered.length > 0) {
+    grid.innerHTML = filtered.map(commodityFromDb => 
+      createCardFromDb(commodityFromDb)
+    ).join('');
+  }
+}
+
+// 更新连接状态指示
+function updateConnectionStatus(connected) {
+  const statusEl = document.getElementById('connectionStatus');
+  if (statusEl) {
+    statusEl.style.display = 'flex';
+    statusEl.innerHTML = connected 
+      ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--accent-green);animation:pulse 2s infinite;margin-right:8px;"></span><span style="font-size:12px;color:var(--accent-green);">实时连接</span>'
+      : '<span style="width:8px;height:8px;border-radius:50%;background:var(--text-muted);margin-right:8px;"></span><span style="font-size:12px;color:var(--text-muted);">数据延迟（轮询模式）</span>';
+  }
+}
+
+// 手动刷新数据
+async function refreshPrices() {
+  try {
+    const response = await fetch(`${API_URL}/crawl/trigger`, { method: 'POST' });
+    const result = await response.json();
+    if (result.success) {
+      alert('数据刷新成功！已更新 ' + result.data.length + ' 项材料价格');
+      updateAllPricesFromBackend();
+    }
+  } catch (error) {
+    console.error('Refresh failed:', error);
+    alert('数据刷新失败，请检查后端服务是否运行');
+  }
+}
+
+// ==================== EXISTING CODE CONTINUES ====================
+
+// ========== DATA ==========
+const commodities = [
+  // Rare Earth
+  {
+    id: 'la2o3', category: 'rare-earth',
+    name_zh: '氧化镧', name_en: 'Lanthanum Oxide',
+    formula: 'La₂O₃', unit_zh: '万元/吨', unit_en: '10K CNY/t',
+    price: 5500, priceDisplay_zh: '5,500', priceDisplay_en: '5,500',
+    change: +2.3, changeAmt: '+125',
+    high: '5,800', low: '5,200',
+    weekChange: '+4.2%',
+    color: '#f59e0b',
+    desc_zh: '用于石油催化裂化、光学玻璃及陶瓷材料。轻稀土大宗产品，受新能源及抛光材料需求拉动。',
+    desc_en: 'Used in FCC catalysts, optical glass and ceramics. Light rare earth bulk product, driven by new energy and polishing demand.',
+    sparkData: [4800,4900,5100,5000,5200,5350,5100,5400,5500,5500]
+  },
+  {
+    id: 'ceo2', category: 'rare-earth',
+    name_zh: '氧化铈', name_en: 'Cerium Oxide',
+    formula: 'CeO₂', unit_zh: '万元/吨', unit_en: '10K CNY/t',
+    price: 15250, priceDisplay_zh: '15,250', priceDisplay_en: '15,250',
+    change: +1.1, changeAmt: '+165',
+    high: '15,500', low: '14,800',
+    weekChange: '+2.8%',
+    color: '#eab308',
+    desc_zh: '重要抛光材料及催化剂组分，广泛用于玻璃加工、汽车尾气净化及燃料电池领域。',
+    desc_en: 'Key polishing material and catalyst component, widely used in glass processing, auto exhaust purification and fuel cells.',
+    sparkData: [14200,14500,14800,14600,15000,14900,15100,15250,15250,15250]
+  },
+  {
+    id: 'la-metal', category: 'rare-earth',
+    name_zh: '金属镧', name_en: 'Lanthanum Metal',
+    formula: 'La', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 19500, priceDisplay_zh: '19,500', priceDisplay_en: '19,500',
+    change: 0, changeAmt: '0',
+    high: '20,000', low: '19,200',
+    weekChange: '+0.5%',
+    color: '#d97706',
+    desc_zh: '用于镍氢电池负极合金、特种钢铁脱氧脱硫，合金级Ce≥65%标准品。',
+    desc_en: 'Used in NiMH battery anode alloys, special steel deoxidation. Alloy grade Ce≥65% standard.',
+    sparkData: [19000,19200,19400,19100,19500,19300,19500,19500,19500,19500]
+  },
+  {
+    id: 'ce-metal', category: 'rare-earth',
+    name_zh: '金属铈（电池级）', name_en: 'Cerium Metal (Battery)',
+    formula: 'Ce', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 21500, priceDisplay_zh: '21,500', priceDisplay_en: '21,500',
+    change: -0.5, changeAmt: '-100',
+    high: '22,000', low: '21,200',
+    weekChange: '-1.2%',
+    color: '#ca8a04',
+    desc_zh: '电池级金属铈，Ce≥65%，用于储氢合金及稀土永磁体添加剂。',
+    desc_en: 'Battery grade cerium metal, Ce≥65%, for hydrogen storage alloys and rare earth permanent magnet additives.',
+    sparkData: [22200,22000,21800,21900,21600,21700,21500,21500,21500,21500]
+  },
+  // Catalyst Materials
+  {
+    id: 'pseudo-boehmite', category: 'catalyst',
+    name_zh: '拟薄水铝石', name_en: 'Pseudo-boehmite',
+    formula: 'AlOOH·nH₂O', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 18500, priceDisplay_zh: '18,500', priceDisplay_en: '18,500',
+    change: +1.6, changeAmt: '+290',
+    high: '19,000', low: '17,800',
+    weekChange: '+3.1%',
+    color: '#3b82f6',
+    desc_zh: '催化裂化(FCC)催化剂关键载体前驱体，高比表面积型需求持续增长，受炼化产能升级驱动。',
+    desc_en: 'Key precursor for FCC catalyst supports. High surface area grade demand grows with refinery upgrades.',
+    sparkData: [17200,17500,17800,18000,17900,18200,18100,18400,18500,18500]
+  },
+  {
+    id: 'molecular-sieve', category: 'catalyst',
+    name_zh: '硅铝分子筛', name_en: 'Silica-Alumina Zeolite',
+    formula: 'ZSM-5 / Y型', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 42000, priceDisplay_zh: '42,000', priceDisplay_en: '42,000',
+    change: +0.8, changeAmt: '+350',
+    high: '43,500', low: '40,800',
+    weekChange: '+2.2%',
+    color: '#6366f1',
+    desc_zh: 'ZSM-5/Y型分子筛是石油炼制催化裂化和化工分离过程的核心材料，国六标准推动需求升级。',
+    desc_en: 'ZSM-5/Y zeolites are core materials for FCC and chemical separation. China VI standards drive demand upgrade.',
+    sparkData: [39500,40000,40500,41000,40800,41200,41500,41800,42000,42000]
+  },
+  {
+    id: 'sio2-support', category: 'catalyst',
+    name_zh: '二氧化硅载体', name_en: 'Silica Support',
+    formula: 'SiO₂', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 8500, priceDisplay_zh: '8,500', priceDisplay_en: '8,500',
+    change: +0.6, changeAmt: '+50',
+    high: '8,800', low: '8,200',
+    weekChange: '+1.5%',
+    color: '#06b6d4',
+    desc_zh: '高纯度多孔SiO₂载体，广泛用于加氢、氧化及聚合反应催化剂的负载基材。',
+    desc_en: 'High-purity porous SiO₂ support, widely used as substrate for hydrogenation, oxidation and polymerization catalysts.',
+    sparkData: [8000,8100,8200,8150,8300,8250,8400,8450,8500,8500]
+  },
+  // Non-ferrous Metals
+  {
+    id: 'mo', category: 'metals',
+    name_zh: '钼', name_en: 'Molybdenum',
+    formula: 'Mo', unit_zh: '元/千克', unit_en: 'CNY/kg',
+    price: 629, priceDisplay_zh: '629', priceDisplay_en: '629',
+    change: 0, changeAmt: '0',
+    high: '645', low: '618',
+    weekChange: '+0.3%',
+    color: '#a855f7',
+    desc_zh: '战略金属，用于特种钢合金化、催化剂及电子材料。钼杆报价持稳，下游需求刚性支撑。',
+    desc_en: 'Strategic metal for special steel alloying, catalysts and electronics. Rod prices stable, rigid downstream demand.',
+    sparkData: [610,615,620,618,625,622,628,630,629,629]
+  },
+  {
+    id: 'co', category: 'metals',
+    name_zh: '钴', name_en: 'Cobalt',
+    formula: 'Co', unit_zh: '万元/吨', unit_en: '10K CNY/t',
+    price: 26.8, priceDisplay_zh: '26.8', priceDisplay_en: '268,000',
+    change: -1.2, changeAmt: '-0.32',
+    high: '28.5', low: '25.8',
+    weekChange: '-2.5%',
+    color: '#8b5cf6',
+    desc_zh: '新能源电池核心金属，受三元锂电池需求波动影响。刚果(金)供应端扰动为价格提供底部支撑。',
+    desc_en: 'Core metal for EV batteries, affected by NCM battery demand fluctuation. DRC supply disruptions provide price floor.',
+    sparkData: [29.5,29.0,28.2,28.5,27.8,27.5,27.2,27.0,26.8,26.8]
+  },
+  {
+    id: 'ni', category: 'metals',
+    name_zh: '镍', name_en: 'Nickel',
+    formula: 'Ni', unit_zh: '万元/吨', unit_en: '10K CNY/t',
+    price: 13.25, priceDisplay_zh: '13.25', priceDisplay_en: '132,500',
+    change: +0.9, changeAmt: '+0.12',
+    high: '13.8', low: '12.9',
+    weekChange: '+1.8%',
+    color: '#7c3aed',
+    desc_zh: '不锈钢及动力电池关键材料。印尼镍矿政策收紧预期叠加不锈钢旺季需求，价格震荡偏强运行。',
+    desc_en: 'Key material for stainless steel and power batteries. Indonesia ore policy tightening plus seasonal demand drives prices higher.',
+    sparkData: [12.5,12.7,12.9,12.8,13.0,12.95,13.1,13.15,13.25,13.25]
+  },
+  {
+    id: 'w', category: 'metals',
+    name_zh: '钨', name_en: 'Tungsten',
+    formula: 'W (WO₃≥65%)', unit_zh: '万元/标吨', unit_en: '10K CNY/std-t',
+    price: 35.5, priceDisplay_zh: '35.5', priceDisplay_en: '355,000',
+    change: +3.2, changeAmt: '+1.1',
+    high: '36.0', low: '33.8',
+    weekChange: '+5.8%',
+    color: '#9333ea',
+    desc_zh: '硬质合金及军工核心材料。国内开采总量控制叠加海外需求复苏，钨精矿价格持续高位运行。',
+    desc_en: 'Core material for cemented carbide and defense. Domestic mining quota plus overseas demand recovery keeps prices elevated.',
+    sparkData: [31.0,31.8,32.5,33.0,33.5,34.0,34.2,34.8,35.5,35.5]
+  },
+  // Specialty Materials
+  {
+    id: 'ti-compound', category: 'specialty',
+    name_zh: '钛化合物', name_en: 'Titanium Compounds',
+    formula: 'TiO₂ / TiCl₄', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 16800, priceDisplay_zh: '16,800', priceDisplay_en: '16,800',
+    change: +1.5, changeAmt: '+250',
+    high: '17,200', low: '16,200',
+    weekChange: '+2.8%',
+    color: '#14b8a6',
+    desc_zh: '钛白粉(TiO₂)及四氯化钛(TiCl₄)，涂料、塑料及Ziegler-Natta催化剂关键原料。',
+    desc_en: 'TiO₂ and TiCl₄, key raw materials for coatings, plastics and Ziegler-Natta catalysts.',
+    sparkData: [15800,16000,16200,16100,16400,16300,16500,16600,16800,16800]
+  },
+  {
+    id: 'mgcl2', category: 'specialty',
+    name_zh: '氯化镁', name_en: 'Magnesium Chloride',
+    formula: 'MgCl₂', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 1850, priceDisplay_zh: '1,850', priceDisplay_en: '1,850',
+    change: -0.8, changeAmt: '-15',
+    high: '1,950', low: '1,780',
+    weekChange: '-1.5%',
+    color: '#0ea5e9',
+    desc_zh: '聚烯烃催化剂载体核心原料及冶金助熔剂。无水氯化镁高纯品价格受催化剂需求驱动。',
+    desc_en: 'Core raw material for polyolefin catalyst supports and metallurgical flux. Anhydrous high-purity grade driven by catalyst demand.',
+    sparkData: [1920,1900,1880,1890,1870,1860,1855,1850,1850,1850]
+  },
+  {
+    id: 'zr-metallocene', category: 'specialty',
+    name_zh: '锆茂金属', name_en: 'Zirconium Metallocene',
+    formula: 'Cp₂ZrCl₂', unit_zh: '万元/吨', unit_en: '10K CNY/t',
+    price: 125, priceDisplay_zh: '125', priceDisplay_en: '1,250,000',
+    change: +2.5, changeAmt: '+3.0',
+    high: '130', low: '118',
+    weekChange: '+4.2%',
+    color: '#f43f5e',
+    desc_zh: '高端聚烯烃茂金属催化剂核心组分，二氯二茂锆(Cp₂ZrCl₂)用于mPE/mPP生产，国产替代加速。',
+    desc_en: 'Core component of metallocene catalysts for advanced polyolefins. Cp₂ZrCl₂ for mPE/mPP, domestic substitution accelerating.',
+    sparkData: [115,116,118,117,119,120,121,123,125,125]
+  },
+  {
+    id: 'tio2', category: 'specialty',
+    name_zh: '钛白粉（R型）', name_en: 'TiO₂ (Rutile)',
+    formula: 'TiO₂', unit_zh: '元/吨', unit_en: 'CNY/t',
+    price: 15200, priceDisplay_zh: '15,200', priceDisplay_en: '15,200',
+    change: +0.7, changeAmt: '+100',
+    high: '15,800', low: '14,800',
+    weekChange: '+1.8%',
+    color: '#10b981',
+    desc_zh: '金红石型钛白粉，涂料、造纸及塑料工业最重要的白色颜料，出口需求持续旺盛。',
+    desc_en: 'Rutile TiO₂, the most important white pigment for coatings, paper and plastics. Export demand remains strong.',
+    sparkData: [14500,14700,14800,14900,14850,15000,15050,15100,15200,15200]
+  }
+];
+
+const newsData = [
+  {
+    tag_zh: '稀土', tag_en: 'Rare Earth', tagColor: '#f59e0b',
+    title_zh: '稀土价格有望上行，出口管制政策推动市场重估',
+    title_en: 'Rare earth prices set to rise as export controls drive market reassessment',
+    excerpt_zh: '受中美贸易摩擦升级及稀土出口管制影响，轻稀土产品价格普遍上涨，分析师预计氧化镧、氧化铈将在三季度维持偏强运行。',
+    excerpt_en: 'Amid escalating US-China trade tensions and rare earth export controls, light rare earth products are broadly rising. Analysts expect La₂O₃ and CeO₂ to maintain bullish trends in Q3.',
+    time_zh: '2小时前', time_en: '2 hours ago'
+  },
+  {
+    tag_zh: '钨市场', tag_en: 'Tungsten', tagColor: '#9333ea',
+    title_zh: '钨精矿价格持续高位，多家钨企上调长单报价',
+    title_en: 'Tungsten concentrate prices remain elevated; multiple firms raise long-term contract quotes',
+    excerpt_zh: '国内开采总量控制政策持续，叠加海外硬质合金需求复苏，仲钨酸铵(APT)价格突破35万元/标吨关口。',
+    excerpt_en: 'Domestic mining quotas persist alongside recovering overseas carbide demand. APT prices breach the 350K CNY/std-t mark.',
+    time_zh: '5小时前', time_en: '5 hours ago'
+  },
+  {
+    tag_zh: '催化剂', tag_en: 'Catalyst', tagColor: '#3b82f6',
+    title_zh: '拟薄水铝石需求旺季来临，炼化产能升级拉动市场',
+    title_en: 'Pseudo-boehmite enters peak season as refinery upgrades drive demand',
+    excerpt_zh: '随着国六排放标准全面实施，FCC催化剂需求持续攀升，拟薄水铝石及硅铝分子筛进入传统需求旺季。',
+    excerpt_en: 'With full implementation of China VI emission standards, FCC catalyst demand continues to rise. Pseudo-boehmite and zeolites enter peak season.',
+    time_zh: '8小时前', time_en: '8 hours ago'
+  },
+  {
+    tag_zh: '新能源', tag_en: 'New Energy', tagColor: '#10b981',
+    title_zh: '钴价承压，刚果(金)出口恢复缓解供应忧虑',
+    title_en: 'Cobalt under pressure as DRC export resumption eases supply concerns',
+    excerpt_zh: '刚果(金)钴矿出口限制解除后，市场供应预期改善，电解钴价格短期回调，但电池级硫酸钴需求仍具韧性。',
+    excerpt_en: 'After DRC lifted cobalt export restrictions, supply expectations improved. Electrolytic cobalt prices corrected lower, but battery-grade CoSO₄ demand remains resilient.',
+    time_zh: '12小时前', time_en: '12 hours ago'
+  },
+  {
+    tag_zh: '化工', tag_en: 'Chemical', tagColor: '#14b8a6',
+    title_zh: '茂金属催化剂国产替代加速，锆茂金属需求放量',
+    title_en: 'Domestic metallocene catalyst substitution accelerates, Zr-metallocene demand surges',
+    excerpt_zh: '国内多家石化企业完成茂金属聚乙烯(mPE)工艺验证，二氯二茂锆(Cp₂ZrCl₂)需求大幅增长，进口依赖度降低。',
+    excerpt_en: 'Multiple Chinese petrochemical firms completed mPE process validation. Cp₂ZrCl₂ demand surges as import dependence decreases.',
+    time_zh: '1天前', time_en: '1 day ago'
+  },
+  {
+    tag_zh: '镍市', tag_en: 'Nickel', tagColor: '#7c3aed',
+    title_zh: '印尼镍矿配额审批趋紧，镍价震荡偏强',
+    title_en: 'Indonesia nickel ore quota approvals tighten, prices trend higher',
+    excerpt_zh: '印尼能源矿产部收紧RKAB采矿配额审批，市场担忧中期矿石供应，沪镍主力合约震荡上行。',
+    excerpt_en: 'Indonesia\'s MEMR tightens RKAB mining quota approvals. Market concerns over mid-term ore supply push SHFE nickel futures higher.',
+    time_zh: '1天前', time_en: '1 day ago'
+  }
+];
+
+// ========== i18n ==========
+const translations = {
+  zh: {
+    logoText: '材料价格通', navMovers: '涨跌榜', navRare: '稀土系列',
+    navCatalyst: '催化材料', navMetals: '有色金属', navSpecialty: '特种材料',
+    navNews: '市场资讯', navMap: '🗺 全球矿业地图', searchText: '搜索',
+    heroBadge: '实时行情', heroTitle1: '工业原材料', heroTitle2: '实时价格与深度分析',
+    heroSub: '追踪稀土、催化材料、有色金属等12+工业原材料实时价格，覆盖催化剂、冶金、化工等核心产业链。',
+    tabMovers: '今日涨跌', tabRare: '稀土系列', tabCatalyst: '催化材料',
+    tabMetals: '有色金属', tabSpecialty: '特种材料', tabNews: '市场资讯',
+    moversTitle: '今日涨跌幅', moversDesc: '按价格变动幅度排列的工业原材料',
+    btnGainers: '↑ 涨幅榜', btnDecliners: '↓ 跌幅榜',
+    rareTitle: '稀土系列', rareDesc: '镧系、铈系稀土氧化物及金属',
+    catTitle: '催化材料', catDesc: '催化裂化、加氢及载体材料',
+    metalTitle: '有色金属', metalDesc: '钼、钴、镍、钨等战略性金属',
+    specTitle: '特种材料', specDesc: '茂金属催化剂、特种载体及化工原料',
+    newsTitle: '市场资讯', newsDesc: '最新行业动态与市场分析',
+    footerDesc: '专注于稀土、催化材料及有色金属的实时价格追踪与深度市场分析，为产业链企业提供决策参考。',
+    footerData: '数据中心', footerTools: '分析工具', footerAbout: '关于我们',
+    footerCompare: '价格对比', footerHistory: '历史趋势', footerAlert: '价格预警', footerAPI: '数据接口',
+    footerIntro: '平台介绍', footerContact: '联系我们', footerPrivacy: '隐私政策', footerTerms: '使用条款',
+    footerRights: '保留所有权利', footerDisclaimer: '价格数据来源于公开市场信息（仅供参考，不构成投资建议）',
+    searchNav: '导航', searchSelect: '选择', searchClose: '关闭',
+    metaHigh: '日内高点', metaLow: '日内低点', metaWeek: '周涨跌', metaFormula: '化学式',
+    stripUp: '上涨', stripDown: '下跌', stripFlat: '持平', stripTotal: '监控品种'
+  },
+  en: {
+    logoText: 'MatPriceWatch', navMovers: 'Movers', navRare: 'Rare Earth',
+    navCatalyst: 'Catalysts', navMetals: 'Metals', navSpecialty: 'Specialty',
+    navNews: 'News', navMap: '🗺 Global Mining Map', searchText: 'Search',
+    heroBadge: 'Live Prices', heroTitle1: 'Industrial Materials', heroTitle2: 'Live Prices & Deep Analysis',
+    heroSub: 'Track 12+ industrial material prices in real-time: rare earths, catalysts, non-ferrous metals — covering catalyst, metallurgy and chemical supply chains.',
+    tabMovers: 'Today\'s Movers', tabRare: 'Rare Earth', tabCatalyst: 'Catalysts',
+    tabMetals: 'Metals', tabSpecialty: 'Specialty', tabNews: 'News',
+    moversTitle: 'Today\'s Movers', moversDesc: 'Industrial materials ranked by price change',
+    btnGainers: '↑ Gainers', btnDecliners: '↓ Decliners',
+    rareTitle: 'Rare Earth', rareDesc: 'Lanthanum & cerium series oxides and metals',
+    catTitle: 'Catalyst Materials', catDesc: 'FCC, hydrogenation and support materials',
+    metalTitle: 'Non-ferrous Metals', metalDesc: 'Mo, Co, Ni, W strategic metals',
+    specTitle: 'Specialty Materials', specDesc: 'Metallocene catalysts, specialty supports & chemicals',
+    newsTitle: 'Market News', newsDesc: 'Latest industry dynamics and market analysis',
+    footerDesc: 'Focused on real-time price tracking and deep market analysis for rare earths, catalyst materials and non-ferrous metals — providing decision support for supply chain enterprises.',
+    footerData: 'Data Center', footerTools: 'Analysis Tools', footerAbout: 'About',
+    footerCompare: 'Compare', footerHistory: 'Trends', footerAlert: 'Alerts', footerAPI: 'API',
+    footerIntro: 'About Us', footerContact: 'Contact', footerPrivacy: 'Privacy', footerTerms: 'Terms',
+    footerRights: 'All rights reserved', footerDisclaimer: 'Price data from public market sources (for reference only, not investment advice)',
+    searchNav: 'Navigate', searchSelect: 'Select', searchClose: 'Close',
+    metaHigh: 'Day High', metaLow: 'Day Low', metaWeek: 'Week Δ', metaFormula: 'Formula',
+    stripUp: 'Up', stripDown: 'Down', stripFlat: 'Flat', stripTotal: 'Tracked'
+  }
+};
+
+let currentLang = 'zh';
+
+// ========== RENDER FUNCTIONS ==========
+function drawSparkline(canvas, data, color) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const step = w / (data.length - 1);
+  const padding = 2;
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, color + '30');
+  grad.addColorStop(1, color + '00');
+
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = padding + (1 - (v - min) / range) * (h - padding * 2);
+    if (i === 0) ctx.lineTo(x, y);
+    else {
+      const px = (i - 1) * step;
+      const py = padding + (1 - (data[i-1] - min) / range) * (h - padding * 2);
+      const cpx = (px + x) / 2;
+      ctx.bezierCurveTo(cpx, py, cpx, y, x, y);
+    }
+  });
+  ctx.lineTo(w, h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = padding + (1 - (v - min) / range) * (h - padding * 2);
+    if (i === 0) ctx.moveTo(x, y);
+    else {
+      const px = (i - 1) * step;
+      const py = padding + (1 - (data[i-1] - min) / range) * (h - padding * 2);
+      const cpx = (px + x) / 2;
+      ctx.bezierCurveTo(cpx, py, cpx, y, x, y);
+    }
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // End dot
+  const lastX = (data.length - 1) * step;
+  const lastY = padding + (1 - (data[data.length-1] - min) / range) * (h - padding * 2);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function createCard(c) {
+  const lang = currentLang;
+  const name = lang === 'zh' ? c.name_zh : c.name_en;
+  const unit = lang === 'zh' ? c.unit_zh : c.unit_en;
+  const priceDisp = lang === 'zh' ? c.priceDisplay_zh : c.priceDisplay_en;
+  const desc = lang === 'zh' ? c.desc_zh : c.desc_en;
+  const t = translations[lang];
+  const changeClass = c.change > 0 ? 'up' : c.change < 0 ? 'down' : 'flat';
+  const changeIcon = c.change > 0 ? '▲' : c.change < 0 ? '▼' : '—';
+  const changeStr = c.change > 0 ? `+${c.change}%` : `${c.change}%`;
+
+  return `
+    <div class="commodity-card" data-id="${c.id}" style="--card-accent: ${c.color}">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;background:${c.color};opacity:0.6;"></div>
+      <div class="card-top">
+        <div class="card-name-group">
+          <div class="card-name">${name}</div>
+          <div class="card-name-en">${lang === 'zh' ? c.name_en : c.formula}</div>
+        </div>
+        <div class="card-unit">${unit}</div>
+      </div>
+      <div class="card-price-row">
+        <div class="card-price" style="color:${c.color}">¥${priceDisp}</div>
+        <div class="card-change ${changeClass}">
+          ${changeIcon} ${changeStr}
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="meta-item">
+          <div class="meta-label">${t.metaHigh}</div>
+          <div class="meta-value">${c.high}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">${t.metaLow}</div>
+          <div class="meta-value">${c.low}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">${t.metaWeek}</div>
+          <div class="meta-value" style="color:${c.weekChange.startsWith('+') ? 'var(--accent-green)' : c.weekChange.startsWith('-') ? 'var(--accent-red)' : 'var(--text-secondary)'}">${c.weekChange}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">${t.metaFormula}</div>
+          <div class="meta-value">${c.formula}</div>
+        </div>
+      </div>
+      <div class="card-desc">${desc}</div>
+      <div class="sparkline-wrap"><canvas data-spark='${JSON.stringify(c.sparkData)}' data-color='${c.color}'></canvas></div>
+    </div>
+  `;
+}
+
+function renderMovers(type) {
+  const sorted = [...commodities].sort((a, b) => {
+    return type === 'gainers' ? b.change - a.change : a.change - b.change;
+  });
+  const filtered = sorted.filter(c => type === 'gainers' ? c.change >= 0 : c.change < 0);
+  const grid = document.getElementById('moversGrid');
+  grid.innerHTML = (filtered.length ? filtered : sorted.slice(0, 4)).map(createCard).join('');
+  requestAnimationFrame(renderSparklines);
+}
+
+function renderCategory(category, gridId) {
+  const items = commodities.filter(c => c.category === category);
+  document.getElementById(gridId).innerHTML = items.map(createCard).join('');
+}
+
+function renderNews() {
+  const lang = currentLang;
+  document.getElementById('newsGrid').innerHTML = newsData.map(n => `
+    <div class="news-card">
+      <div class="news-tag" style="background:${n.tagColor}20;color:${n.tagColor}">${lang === 'zh' ? n.tag_zh : n.tag_en}</div>
+      <div class="news-title">${lang === 'zh' ? n.title_zh : n.title_en}</div>
+      <div class="news-excerpt">${lang === 'zh' ? n.excerpt_zh : n.excerpt_en}</div>
+      <div class="news-time">${lang === 'zh' ? n.time_zh : n.time_en}</div>
+    </div>
+  `).join('');
+}
+
+function renderStrip() {
+  const t = translations[currentLang];
+  const upCount = commodities.filter(c => c.change > 0).length;
+  const downCount = commodities.filter(c => c.change < 0).length;
+  const flatCount = commodities.filter(c => c.change === 0).length;
+
+  document.getElementById('stripGrid').innerHTML = `
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripTotal}</div><div class="strip-value">${commodities.length}</div></div>
+    </div>
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripUp}</div><div class="strip-value" style="color:var(--accent-green)">${upCount}</div></div>
+      <div class="strip-change up">▲</div>
+    </div>
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripDown}</div><div class="strip-value" style="color:var(--accent-red)">${downCount}</div></div>
+      <div class="strip-change down">▼</div>
+    </div>
+    <div class="strip-item">
+      <div><div class="strip-label">${t.stripFlat}</div><div class="strip-value" style="color:var(--text-muted)">${flatCount}</div></div>
+      <div class="strip-change flat">—</div>
+    </div>
+  `;
+}
+
+function renderSparklines() {
+  document.querySelectorAll('.sparkline-wrap canvas').forEach(canvas => {
+    try {
+      const data = JSON.parse(canvas.dataset.spark);
+      const color = canvas.dataset.color;
+      drawSparkline(canvas, data, color);
+    } catch(e) {}
+  });
+}
+
+function renderAll() {
+  renderStrip();
+  renderMovers('gainers');
+  renderCategory('rare-earth', 'rareEarthGrid');
+  renderCategory('catalyst', 'catalystGrid');
+  renderCategory('metals', 'metalsGrid');
+  renderCategory('specialty', 'specialtyGrid');
+  renderNews();
+  requestAnimationFrame(() => {
+    requestAnimationFrame(renderSparklines);
+  });
+}
+
+// ========== INTERACTIONS ==========
+function toggleMovers(type, btn) {
+  document.querySelectorAll('.section-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMovers(type);
+}
+
+function scrollToSection(id) {
+  document.querySelectorAll('.tab-pill').forEach(t => t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'zh' ? 'en' : 'zh';
+  document.getElementById('langBtn').textContent = currentLang === 'zh' ? 'EN' : '中文';
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+
+  // Update all i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (translations[currentLang][key]) {
+      el.textContent = translations[currentLang][key];
+    }
+  });
+
+  // Update search placeholder
+  const si = document.getElementById('searchInput');
+  si.placeholder = currentLang === 'zh' ? si.dataset.placeholderZh : si.dataset.placeholderEn;
+
+  renderAll();
+}
+
+// ========== THEME TOGGLE ==========
+let currentTheme = 'dark';
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(currentTheme);
+}
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.remove('dark');
+    document.getElementById('themeBtn').textContent = '☀️';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.classList.add('dark');
+    document.getElementById('themeBtn').textContent = '🌙';
+  }
+  try { localStorage.setItem('theme', theme); } catch(e) {}
+}
+
+// Initialize theme on page load
+(function initTheme() {
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved) applyTheme(saved);
+  } catch(e) {}
+})();
+
+// ========== SEARCH ==========
+function openSearch() {
+  document.getElementById('searchOverlay').classList.add('open');
+  document.getElementById('searchInput').focus();
+  renderSearchResults('');
+}
+
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('open');
+  document.getElementById('searchInput').value = '';
+}
+
+function closeSearchOutside(e) {
+  if (e.target === document.getElementById('searchOverlay')) closeSearch();
+}
+
+function filterSearch(query) {
+  renderSearchResults(query);
+}
+
+function renderSearchResults(query) {
+  const lang = currentLang;
+  const q = query.toLowerCase().trim();
+  const filtered = q ? commodities.filter(c =>
+    c.name_zh.includes(q) || c.name_en.toLowerCase().includes(q) || c.formula.toLowerCase().includes(q)
+  ) : commodities;
+
+  document.getElementById('searchResults').innerHTML = filtered.map(c => {
+    const name = lang === 'zh' ? c.name_zh : c.name_en;
+    const price = lang === 'zh' ? c.priceDisplay_zh : c.priceDisplay_en;
+    const changeClass = c.change > 0 ? 'up' : c.change < 0 ? 'down' : 'flat';
+    const changeIcon = c.change > 0 ? '▲' : c.change < 0 ? '▼' : '—';
+    return `
+      <div class="search-result-item" onclick="closeSearch();document.getElementById('${c.category === 'rare-earth' ? 'rare-earth' : c.category}').scrollIntoView({behavior:'smooth'})">
+        <div>
+          <div class="search-result-name">${name}</div>
+          <div class="search-result-cat">${c.formula}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="search-result-price" style="color:${c.color}">¥${price}</div>
+          <div class="strip-change ${changeClass}" style="font-size:12px;justify-content:flex-end">${changeIcon} ${c.change > 0 ? '+' : ''}${c.change}%</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openSearch();
+  }
+  if (e.key === 'Escape') closeSearch();
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Resize sparklines
+window.addEventListener('resize', () => {
+  clearTimeout(window._sparkResize);
+  window._sparkResize = setTimeout(renderSparklines, 200);
+});
+
+// Tab scroll spy
+const sections = ['movers', 'rare-earth', 'catalyst', 'metals', 'specialty', 'news'];
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY + 140;
+  let current = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop <= scrollY) current = id;
+  });
+  document.querySelectorAll('.tab-pill').forEach((pill, i) => {
+    pill.classList.toggle('active', sections[i] === current);
+  });
+});
+
+// Init
+renderAll();
+
+// 初始化WebSocket连接
+console.log('MaterialPriceWatch initialized. Attempting WebSocket connection...');
+updateConnectionStatus(false);
+
+// 延迟连接（避免页面加载阻塞）
+setTimeout(() => {
+  connectWebSocket();
+}, 1000);
+
+// 如果WebSocket连接失败，启动轮询回退
+setTimeout(() => {
+  if (!isConnected) {
+    console.log('WebSocket not connected, starting polling fallback...');
+    startPollingFallback();
+  }
+}, 10000); // 10秒后检查
+
+</script>
+
+</body>
+</html>

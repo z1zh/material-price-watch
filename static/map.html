@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全球矿业地图 — 材料价格通</title>
+<script>
+(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');document.documentElement.classList.remove('dark')}}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #09090b;
+    --bg-secondary: #18181b;
+    --bg-card: #1c1c21;
+    --bg-card-hover: #232329;
+    --border: #27272a;
+    --border-subtle: #1e1e22;
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --map-bg: #111113;
+    --map-land: #27272a;
+    --map-border-line: #3f3f46;
+    --map-ocean: #09090b;
+    --accent-green: #22c55e;
+    --accent-red: #ef4444;
+    --accent-amber: #f59e0b;
+    --accent-blue: #3b82f6;
+    --accent-purple: #a855f7;
+    --accent-cyan: #06b6d4;
+    --glow-green: rgba(34, 197, 94, 0.12);
+  }
+
+  [data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --map-bg: #f0f4f8;
+    --map-land: #e2e8f0;
+    --map-border-line: #cbd5e1;
+    --map-ocean: #f0f4f8;
+    --accent-green: #16a34a;
+    --accent-red: #dc2626;
+    --accent-amber: #d97706;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #27272a #09090b;
+  }
+
+  body {
+    font-family: 'DM Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+  [data-theme="light"]::-webkit-scrollbar-track { background: #f8fafc; }
+  [data-theme="light"]::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+  /* ===== HEADER ===== */
+  .site-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(9, 9, 11, 0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  [data-theme="light"] .site-header {
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  .header-inner {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo-group { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; }
+
+  .logo-text {
+    font-weight: 700; font-size: 18px; letter-spacing: -0.5px;
+    color: var(--text-primary); transition: color 0.3s;
+  }
+
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+
+  .nav-links a {
+    padding: 7px 14px; border-radius: 7px; font-size: 14px;
+    font-weight: 500; color: var(--text-secondary);
+    text-decoration: none; transition: all 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+  .nav-links a.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+
+  [data-theme="light"] .nav-links a:hover { background: rgba(0,0,0,0.04); }
+  [data-theme="light"] .nav-links a.active { background: rgba(0,0,0,0.06); }
+
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+
+  .theme-toggle, .lang-toggle {
+    padding: 7px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 13px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+  }
+
+  .theme-toggle:hover, .lang-toggle:hover {
+    border-color: #3f3f46; color: var(--text-primary);
+  }
+
+  [data-theme="light"] .theme-toggle, [data-theme="light"] .lang-toggle {
+    background: rgba(0,0,0,0.04);
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    text-align: center; padding: 56px 24px 24px;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 350px;
+    background: radial-gradient(ellipse, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 16px; border-radius: 100px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #818cf8; font-size: 13px; font-weight: 500;
+    margin-bottom: 20px;
+  }
+
+  .hero-badge svg { width: 14px; height: 14px; }
+
+  .hero h1 {
+    font-size: clamp(28px, 4.5vw, 44px);
+    font-weight: 800; letter-spacing: -1px;
+    line-height: 1.15; margin-bottom: 14px;
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: clamp(14px, 2vw, 17px);
+    color: var(--text-muted); max-width: 540px; margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ===== COMMODITY SELECTOR ===== */
+  .commodity-selector {
+    position: sticky; top: 64px; z-index: 90;
+    background: rgba(9, 9, 11, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  [data-theme="light"] .commodity-selector {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .selector-scroll {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px;
+    overflow-x: auto; white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .selector-scroll::-webkit-scrollbar { display: none; }
+
+  .pill-group { display: inline-flex; gap: 8px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: 100px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 13px;
+    font-weight: 500; cursor: pointer;
+    transition: all 0.25s; white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .pill:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+
+  .pill.active {
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+  }
+
+  .pill-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main-content {
+    max-width: 1280px; margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    min-height: calc(100vh - 300px);
+  }
+
+  /* ===== MAP CONTAINER ===== */
+  .map-container {
+    background: var(--map-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    min-height: 520px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .map-container svg {
+    width: 100%; height: 100%;
+    display: block;
+  }
+
+  .map-legend {
+    position: absolute; bottom: 16px; left: 16px;
+    background: rgba(9, 9, 11, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  [data-theme="light"] .map-legend {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .legend-title {
+    font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); margin-bottom: 8px;
+  }
+
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px; color: var(--text-secondary);
+  }
+
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ===== TOOLTIP ===== */
+  .map-tooltip {
+    position: absolute; pointer-events: none;
+    background: rgba(9, 9, 11, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 50;
+    min-width: 180px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  [data-theme="light"] .map-tooltip {
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  .tooltip-country {
+    font-weight: 700; font-size: 15px;
+    margin-bottom: 6px; color: var(--text-primary);
+  }
+
+  .tooltip-row {
+    display: flex; justify-content: space-between;
+    gap: 16px; margin-bottom: 3px;
+    color: var(--text-secondary);
+  }
+
+  .tooltip-row span:last-child {
+    font-weight: 600; color: var(--text-primary);
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .sidebar-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .sidebar-commodity-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sidebar-commodity-name {
+    font-weight: 700; font-size: 16px;
+    color: var(--text-primary);
+  }
+
+  .sidebar-commodity-sub {
+    font-size: 12px; color: var(--text-muted);
+  }
+
+  .country-list {
+    display: flex; flex-direction: column; gap: 6px;
+    max-height: calc(100vh - 340px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .country-card {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .country-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--text-muted);
+    transform: translateX(3px);
+  }
+
+  .country-card.highlighted {
+    border-color: var(--accent-amber);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.1);
+  }
+
+  .country-rank {
+    font-size: 20px; font-weight: 800;
+    color: var(--text-muted);
+    min-width: 28px; text-align: center;
+    line-height: 1;
+    padding-top: 2px;
+  }
+
+  .country-rank.top3 { color: var(--accent-amber); }
+
+  .country-info { flex: 1; min-width: 0; }
+
+  .country-name-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .country-flag { font-size: 16px; line-height: 1; }
+
+  .country-name {
+    font-weight: 600; font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .country-share {
+    font-size: 13px; font-weight: 700;
+    color: var(--accent-amber);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .country-desc {
+    font-size: 12px; color: var(--text-muted);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .country-card.expanded .country-desc {
+    -webkit-line-clamp: unset;
+  }
+
+  /* ===== FOOTER ===== */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+    padding: 48px 24px 32px;
+    background: var(--bg-secondary);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .footer-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 40px;
+  }
+
+  .footer-brand .logo-group { margin-bottom: 12px; }
+  .footer-brand p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+  .footer-col h4 {
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+
+  .footer-col a {
+    display: block; font-size: 13px;
+    color: var(--text-muted); text-decoration: none;
+    margin-bottom: 8px; transition: color 0.2s;
+  }
+
+  .footer-col a:hover { color: var(--text-primary); }
+
+  .footer-bottom {
+    max-width: 1280px; margin: 32px auto 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--text-muted);
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 960px) {
+    .main-content {
+      grid-template-columns: 1fr;
+    }
+    .sidebar { order: 2; }
+    .map-container { min-height: 380px; }
+    .country-list { max-height: 400px; }
+    .footer-inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .header-inner { padding: 0 16px; height: 56px; }
+    .nav-links { display: none; }
+    .hero { padding: 36px 16px 16px; }
+    .main-content { padding: 12px; gap: 12px; }
+    .footer-inner { grid-template-columns: 1fr; gap: 20px; }
+    .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  }
+
+  /* ===== LOADING ===== */
+  .map-loading {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; gap: 16px;
+    color: var(--text-muted);
+  }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent-amber);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Country path transitions */
+  .country-path {
+    transition: fill 0.4s ease, stroke 0.2s ease, opacity 0.3s ease;
+    cursor: pointer;
+  }
+
+  .country-path:hover {
+    stroke: var(--text-primary) !important;
+    stroke-width: 1.5px !important;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo-group">
+      <div class="logo-icon">
+        <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="6" width="3" height="10" rx="1" fill="white"/><rect x="7.5" y="3" width="3" height="13" rx="1" fill="white"/><rect x="13" y="8" width="3" height="8" rx="1" fill="white"/></svg>
+      </div>
+      <span class="logo-text" data-zh="材料价格通" data-en="Material Price Watch">材料价格通</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/" data-zh="行情总览" data-en="Price Overview">行情总览</a>
+      <a href="/map" class="active" data-zh="全球矿业地图" data-en="Global Map">全球矿业地图</a>
+    </nav>
+    <div class="header-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <button class="lang-toggle" onclick="toggleLang()">EN / 中</button>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
+    <span data-zh="全球矿业地图" data-en="Production Map">全球矿业地图</span>
+  </div>
+  <h1 data-zh="工业材料从哪里来" data-en="Where Industrial Materials Come From">工业材料从哪里来</h1>
+  <p data-zh="选择一种材料，探索全球主要生产国及其产量分布" data-en="Select a material to explore global production sites and output distribution">选择一种材料，探索全球主要生产国及其产量分布</p>
+</section>
+
+<!-- COMMODITY SELECTOR -->
+<div class="commodity-selector">
+  <div class="selector-scroll">
+    <div class="pill-group" id="pillGroup"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="map-container" id="mapContainer">
+    <div class="map-loading" id="mapLoading">
+      <div class="spinner"></div>
+      <span data-zh="加载地图数据..." data-en="Loading map data...">加载地图数据...</span>
+    </div>
+    <div class="map-tooltip" id="mapTooltip"></div>
+    <div class="map-legend" id="mapLegend" style="display:none;">
+      <div class="legend-title" data-zh="产量等级" data-en="Production Tier">产量等级</div>
+      <div class="legend-item">
+        <div class="legend-dot" id="legendTop" style="background:#f59e0b;"></div>
+        <span data-zh="前3大生产国" data-en="Top 3 Producers">前3大生产国</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" id="legendMid" style="background:#f59e0b80;"></div>
+        <span data-zh="第4-7位" data-en="Mid-tier (4-7)">第4-7位</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" id="legendLow" style="background:#f59e0b4D;"></div>
+        <span data-zh="第8-10位" data-en="Minor (8-10)">第8-10位</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--map-land);"></div>
+        <span data-zh="无数据" data-en="No Data">无数据</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-commodity-dot" id="sidebarDot" style="background:#f59e0b;"></div>
+      <div>
+        <div class="sidebar-commodity-name" id="sidebarName" data-zh="氧化镧" data-en="Lanthanum Oxide">氧化镧</div>
+        <div class="sidebar-commodity-sub" id="sidebarSub" data-zh="全球前10大生产国" data-en="Global Top 10 Producers">全球前10大生产国</div>
+      </div>
+    </div>
+    <div class="country-list" id="countryList"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="6" width="3" height="10" rx="1" fill="white"/><rect x="7.5" y="3" width="3" height="13" rx="1" fill="white"/><rect x="13" y="8" width="3" height="8" rx="1" fill="white"/></svg>
+        </div>
+        <span class="logo-text" data-zh="材料价格通" data-en="Material Price Watch">材料价格通</span>
+      </div>
+      <p data-zh="工业材料实时行情、全球矿业地图与深度分析平台。数据来源：USGS、BGS、上海有色网、百川盈孚。" data-en="Real-time industrial material pricing, global mining maps and deep analysis. Sources: USGS, BGS, SMM, Baiinfo.">工业材料实时行情、全球矿业地图与深度分析平台。数据来源：USGS、BGS、上海有色网、百川盈孚。</p>
+    </div>
+    <div class="footer-col">
+      <h4 data-zh="稀土材料" data-en="Rare Earths">稀土材料</h4>
+      <a href="#" data-zh="氧化镧" data-en="Lanthanum Oxide">氧化镧</a>
+      <a href="#" data-zh="氧化铈" data-en="Cerium Oxide">氧化铈</a>
+      <a href="#" data-zh="金属镧" data-en="Lanthanum Metal">金属镧</a>
+      <a href="#" data-zh="金属铈" data-en="Cerium Metal">金属铈</a>
+    </div>
+    <div class="footer-col">
+      <h4 data-zh="催化材料" data-en="Catalysts">催化材料</h4>
+      <a href="#" data-zh="拟薄水铝石" data-en="Pseudo-boehmite">拟薄水铝石</a>
+      <a href="#" data-zh="硅铝分子筛" data-en="Zeolite">硅铝分子筛</a>
+      <a href="#" data-zh="二氧化硅载体" data-en="Silica Support">二氧化硅载体</a>
+      <a href="#" data-zh="锆茂金属" data-en="Zr Metallocene">锆茂金属</a>
+    </div>
+    <div class="footer-col">
+      <h4 data-zh="有色金属" data-en="Base Metals">有色金属</h4>
+      <a href="#" data-zh="钼" data-en="Molybdenum">钼</a>
+      <a href="#" data-zh="钴" data-en="Cobalt">钴</a>
+      <a href="#" data-zh="镍" data-en="Nickel">镍</a>
+      <a href="#" data-zh="钨" data-en="Tungsten">钨</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span data-zh="&copy; 2025 材料价格通. 数据仅供参考，不构成投资建议。" data-en="&copy; 2025 Material Price Watch. Data for reference only, not investment advice.">&copy; 2025 材料价格通. 数据仅供参考，不构成投资建议。</span>
+    <span data-zh="数据来源: USGS, BGS, SMM,百川盈孚" data-en="Sources: USGS, BGS, SMM, Baiinfo">数据来源: USGS, BGS, SMM, 百川盈孚</span>
+  </div>
+</footer>
+
+<!-- D3.js -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+<script>
+// ===== COMMODITIES LIST =====
+const commodities = [
+  { id: 'la2o3', name_zh: '氧化镧', name_en: 'Lanthanum Oxide', color: '#f59e0b' },
+  { id: 'ceo2', name_zh: '氧化铈', name_en: 'Cerium Oxide', color: '#eab308' },
+  { id: 'la-metal', name_zh: '金属镧', name_en: 'Lanthanum Metal', color: '#d97706' },
+  { id: 'ce-metal', name_zh: '金属铈', name_en: 'Cerium Metal', color: '#ca8a04' },
+  { id: 'pseudo-boehmite', name_zh: '拟薄水铝石', name_en: 'Pseudo-boehmite', color: '#3b82f6' },
+  { id: 'molecular-sieve', name_zh: '硅铝分子筛', name_en: 'Silica-Alumina Zeolite', color: '#6366f1' },
+  { id: 'sio2-support', name_zh: '二氧化硅载体', name_en: 'Silica Support', color: '#06b6d4' },
+  { id: 'mo', name_zh: '钼', name_en: 'Molybdenum', color: '#a855f7' },
+  { id: 'co', name_zh: '钴', name_en: 'Cobalt', color: '#8b5cf6' },
+  { id: 'ni', name_zh: '镍', name_en: 'Nickel', color: '#7c3aed' },
+  { id: 'w', name_zh: '钨', name_en: 'Tungsten', color: '#9333ea' },
+  { id: 'ti-compound', name_zh: '钛化合物', name_en: 'Titanium Compounds', color: '#14b8a6' },
+  { id: 'mgcl2', name_zh: '氯化镁', name_en: 'Magnesium Chloride', color: '#0ea5e9' },
+  { id: 'zr-metallocene', name_zh: '锆茂金属', name_en: 'Zirconium Metallocene', color: '#f43f5e' },
+  { id: 'tio2', name_zh: '钛白粉(R型)', name_en: 'TiO₂ (Rutile)', color: '#10b981' }
+];
+
+// ===== PRODUCTION DATA =====
+const productionData = {
+  'la2o3': {
+    name_zh: '氧化镧', name_en: 'Lanthanum Oxide',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '62%', flag: '🇨🇳', desc_zh: '全球最大稀土生产国，内蒙古白云鄂博矿及南方离子型矿为主要来源。2024年稀土开采总量控制指标约27万吨REO。', desc_en: 'World\'s largest rare earth producer. Inner Mongolia Bayan Obo and southern ionic clay deposits are primary sources.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '12%', flag: '🇺🇸', desc_zh: 'Mountain Pass矿重启后产能逐步释放，MP Materials为美国唯一规模化稀土生产商。', desc_en: 'Mountain Pass mine restart drives US rare earth production growth.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 3, share: '8%', flag: '🇦🇺', desc_zh: 'Lynas Rare Earths旗下Mount Weld矿山为全球第二大轻稀土来源，加工线位于马来西亚关丹。', desc_en: 'Lynas\' Mount Weld mine is the world\'s second largest light rare earth source.' },
+      { code: '104', name_zh: '缅甸', name_en: 'Myanmar', rank: 4, share: '6%', flag: '🇲🇲', desc_zh: '中缅边境离子型稀土矿持续开采，主要出口至中国云南进行分离冶炼。', desc_en: 'Border ionic rare earth mining continues, mainly exported to China for processing.' },
+      { code: '458', name_zh: '马来西亚', name_en: 'Malaysia', rank: 5, share: '4%', flag: '🇲🇾', desc_zh: 'Lynas关丹分离厂处理澳洲矿石，为亚太重要稀土加工枢纽。', desc_en: 'Lynas Kuantan separation plant processes Australian ore, key Asia-Pacific processing hub.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 6, share: '3%', flag: '🇷🇺', desc_zh: 'Solikamsk磷灰石矿伴生稀土，Tomtor铌-稀土矿开发推进中。', desc_en: 'Solikamsk apatite mine byproduct rare earth, Tomtor Nb-REE project under development.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 7, share: '2%', flag: '🇮🇳', desc_zh: 'Indian Rare Earths(IREL)开采海岸砂矿独居石，稀土分离产能扩建中。', desc_en: 'IREL mines coastal monazite sands, expanding separation capacity.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 8, share: '1.5%', flag: '🇨🇦', desc_zh: 'Nechalacho及Strange Lake稀土项目逐步投产，Nechalacho已实现商业化开采。', desc_en: 'Nechalacho and Strange Lake projects ramping up production.' },
+      { code: '710', name_zh: '南非', name_en: 'South Africa', rank: 9, share: '1%', flag: '🇿🇦', desc_zh: 'Steenkampskraal单体高品位稀土矿开发中，预计将增加非洲稀土供应。', desc_en: 'Steenkampskraal high-grade REE mine under development.' },
+      { code: '076', name_zh: '巴西', name_en: 'Brazil', rank: 10, share: '0.5%', flag: '🇧🇷', desc_zh: 'CBMM及Mineracao Serra Verde推进稀土项目，潜力大但产能尚未规模化。', desc_en: 'CBMM and Serra Verde advancing REE projects, high potential but not yet scaled.' }
+    ]
+  },
+  'ceo2': {
+    name_zh: '氧化铈', name_en: 'Cerium Oxide',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '58%', flag: '🇨🇳', desc_zh: '铈为轻稀土最丰产元素，白云鄂博矿及南方离子矿提供大量CeO2，用于抛光粉及催化材料。', desc_en: 'Ce is the most abundant light REE. Bayan Obo and ionic deposits supply bulk CeO2 for polishing and catalysis.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 2, share: '10%', flag: '🇦🇺', desc_zh: 'Mount Weld矿Ce含量高，Lynas在马来西亚加工分离。', desc_en: 'Mount Weld ore has high Ce content, processed by Lynas in Malaysia.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 3, share: '9%', flag: '🇺🇸', desc_zh: 'Mountain Pass矿CeO2产出占其稀土总量约20%。', desc_en: 'Mountain Pass CeO2 accounts for ~20% of its total REE output.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 4, share: '5%', flag: '🇷🇺', desc_zh: '科拉半岛磷灰石矿伴生铈资源，产量有限但资源储量丰富。', desc_en: 'Kola Peninsula apatite byproduct cerium, limited production but rich reserves.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 5, share: '4%', flag: '🇮🇳', desc_zh: '独居石砂矿开采提供铈原料，IREL为唯一生产商。', desc_en: 'Monazite sand mining provides cerium, IREL is the sole producer.' },
+      { code: '104', name_zh: '缅甸', name_en: 'Myanmar', rank: 6, share: '4%', flag: '🇲🇲', desc_zh: '边境离子型矿含铈，但分离加工主要在中国完成。', desc_en: 'Border ionic deposits contain Ce, but separation mainly done in China.' },
+      { code: '458', name_zh: '马来西亚', name_en: 'Malaysia', rank: 7, share: '3%', flag: '🇲🇾', desc_zh: 'Lynas关丹工厂从澳洲矿石中分离铈产品。', desc_en: 'Lynas Kuantan separates Ce products from Australian ore.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 8, share: '2.5%', flag: '🇨🇦', desc_zh: 'Nechalacho矿山铈作为轻稀土混合物的一部分产出。', desc_en: 'Nechalacho mine produces Ce as part of LREE concentrate.' },
+      { code: '710', name_zh: '南非', name_en: 'South Africa', rank: 9, share: '2%', flag: '🇿🇦', desc_zh: 'Steenkampskraal项目预计将产出铈产品。', desc_en: 'Steenkampskraal project expected to produce Ce products.' },
+      { code: '076', name_zh: '巴西', name_en: 'Brazil', rank: 10, share: '1.5%', flag: '🇧🇷', desc_zh: 'Serra Verde项目规划铈产出，尚在建设阶段。', desc_en: 'Serra Verde project plans Ce output, still under construction.' }
+    ]
+  },
+  'la-metal': {
+    name_zh: '金属镧', name_en: 'Lanthanum Metal',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '70%', flag: '🇨🇳', desc_zh: '全球最大金属镧生产国，包钢稀土及赣州稀土为主要冶炼分离企业。', desc_en: 'World\'s largest La metal producer. Baotou Steel RE and Ganzhou RE are major smelters.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '8%', flag: '🇺🇸', desc_zh: 'MP Materials重启冶炼产线，金属镧用于镍氢电池合金。', desc_en: 'MP Materials restarts smelting lines, La metal used in NiMH battery alloys.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 3, share: '6%', flag: '🇦🇺', desc_zh: 'Lynas供应La精矿，但金属加工在马来西亚完成。', desc_en: 'Lynas supplies La concentrate, metal processing in Malaysia.' },
+      { code: '458', name_zh: '马来西亚', name_en: 'Malaysia', rank: 4, share: '5%', flag: '🇲🇾', desc_zh: 'Lynas关丹分离厂产出La产品。', desc_en: 'Lynas Kuantan separation plant produces La products.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 5, share: '4%', flag: '🇷🇺', desc_zh: '俄罗斯La金属产量有限，主要满足军工需求。', desc_en: 'Limited Russian La metal production, mainly for defense.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 6, share: '3%', flag: '🇮🇳', desc_zh: 'IREL小规模生产金属镧，供应国内需求。', desc_en: 'IREL produces La metal on small scale for domestic demand.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 7, share: '2%', flag: '🇨🇦', desc_zh: 'Nechalacho项目La产品逐步商业化。', desc_en: 'Nechalacho project La products gradually commercializing.' },
+      { code: '104', name_zh: '缅甸', name_en: 'Myanmar', rank: 8, share: '1.5%', flag: '🇲🇲', desc_zh: '稀土矿出口至中国加工，无本土冶炼能力。', desc_en: 'Ore exported to China for processing, no domestic smelting.' },
+      { code: '398', name_zh: '哈萨克斯坦', name_en: 'Kazakhstan', rank: 9, share: '0.3%', flag: '🇰🇿', desc_zh: '苏联遗产稀土资源，产能有限。', desc_en: 'Soviet-era REE resources, limited production capacity.' },
+      { code: '076', name_zh: '巴西', name_en: 'Brazil', rank: 10, share: '0.2%', flag: '🇧🇷', desc_zh: '稀土金属生产处于早期开发阶段。', desc_en: 'REE metal production in early development stage.' }
+    ]
+  },
+  'ce-metal': {
+    name_zh: '金属铈', name_en: 'Cerium Metal',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '68%', flag: '🇨🇳', desc_zh: '全球铈金属生产绝对主导地位，包头和赣州为核心产区。', desc_en: 'Absolutely dominant global Ce metal production. Baotou and Ganzhou are core areas.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 2, share: '9%', flag: '🇦🇺', desc_zh: 'Mount Weld Ce精矿经Lynas马来西亚工厂加工为金属。', desc_en: 'Mount Weld Ce concentrate processed to metal at Lynas Malaysia plant.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 3, share: '7%', flag: '🇺🇸', desc_zh: 'Mountain Pass Ce金属产能恢复中。', desc_en: 'Mountain Pass Ce metal capacity recovering.' },
+      { code: '458', name_zh: '马来西亚', name_en: 'Malaysia', rank: 4, share: '5%', flag: '🇲🇾', desc_zh: 'Lynas Ce金属产品供应亚太市场。', desc_en: 'Lynas Ce metal products supply Asia-Pacific market.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 5, share: '4%', flag: '🇷🇺', desc_zh: '科拉半岛Ce金属产量有限。', desc_en: 'Limited Ce metal production from Kola Peninsula.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 6, share: '3%', flag: '🇮🇳', desc_zh: 'IREL供应少量Ce金属满足国内需求。', desc_en: 'IREL supplies small quantities of Ce metal for domestic needs.' },
+      { code: '104', name_zh: '缅甸', name_en: 'Myanmar', rank: 7, share: '2%', flag: '🇲🇲', desc_zh: '出口矿石至中国加工。', desc_en: 'Ore exported to China for processing.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 8, share: '1%', flag: '🇨🇦', desc_zh: 'Nechalacho小规模Ce金属产出。', desc_en: 'Small-scale Ce metal from Nechalacho.' },
+      { code: '710', name_zh: '南非', name_en: 'South Africa', rank: 9, share: '0.5%', flag: '🇿🇦', desc_zh: 'Steenkampskraal项目开发中。', desc_en: 'Steenkampskraal project under development.' },
+      { code: '076', name_zh: '巴西', name_en: 'Brazil', rank: 10, share: '0.5%', flag: '🇧🇷', desc_zh: '稀土金属生产规划阶段。', desc_en: 'REE metal production in planning stage.' }
+    ]
+  },
+  'pseudo-boehmite': {
+    name_zh: '拟薄水铝石', name_en: 'Pseudo-boehmite',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '55%', flag: '🇨🇳', desc_zh: '全球最大拟薄水铝石生产国，中石化催化剂公司及民营催化材料企业为主要供应商。', desc_en: 'World\'s largest pseudo-boehmite producer, led by Sinopec catalyst division and private catalytic material firms.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '15%', flag: '🇺🇸', desc_zh: 'Albemarle、Sasol等化工企业生产高纯度拟薄水铝石用于FCC催化剂。', desc_en: 'Albemarle, Sasol and others produce high-purity pseudo-boehmite for FCC catalysts.' },
+      { code: '276', name_zh: '德国', name_en: 'Germany', rank: 3, share: '10%', flag: '🇩🇪', desc_zh: 'Sasol Germany及BASF催化剂材料部门为欧洲主要供应商。', desc_en: 'Sasol Germany and BASF catalyst materials division are key European suppliers.' },
+      { code: '392', name_zh: '日本', name_en: 'Japan', rank: 4, share: '7%', flag: '🇯🇵', desc_zh: '日挥触媒化成及堺化学为FCC催化剂用拟薄水铝石专业生产商。', desc_en: 'JGC Catalyst and Sakai Chemical specialize in FCC-grade pseudo-boehmite.' },
+      { code: '528', name_zh: '荷兰', name_en: 'Netherlands', rank: 5, share: '5%', flag: '🇳🇱', desc_zh: 'Albemarle荷兰工厂供应欧洲炼油市场。', desc_en: 'Albemarle Netherlands plant supplies European refining market.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 6, share: '3%', flag: '🇮🇳', desc_zh: 'Nalco及印度催化剂公司逐步扩大产能。', desc_en: 'Nalco and Indian catalyst firms gradually expanding capacity.' },
+      { code: '682', name_zh: '沙特阿拉伯', name_en: 'Saudi Arabia', rank: 7, share: '2%', flag: '🇸🇦', desc_zh: 'SABIC关联催化剂材料工厂产能增长。', desc_en: 'SABIC-affiliated catalyst material plants increasing capacity.' },
+      { code: '410', name_zh: '韩国', name_en: 'South Korea', rank: 8, share: '1.5%', flag: '🇰🇷', desc_zh: '韩国催化剂材料企业供应亚太市场。', desc_en: 'Korean catalyst material firms supply Asia-Pacific market.' },
+      { code: '710', name_zh: '南非', name_en: 'South Africa', rank: 9, share: '1%', flag: '🇿🇦', desc_zh: 'Sasol南非工厂少量供应。', desc_en: 'Sasol South Africa plants supply small volumes.' },
+      { code: '764', name_zh: '泰国', name_en: 'Thailand', rank: 10, share: '0.5%', flag: '🇹🇭', desc_zh: '东南亚新兴催化剂材料生产基地。', desc_en: 'Emerging Southeast Asian catalyst material production base.' }
+    ]
+  },
+  'molecular-sieve': {
+    name_zh: '硅铝分子筛', name_en: 'Silica-Alumina Zeolite',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '48%', flag: '🇨🇳', desc_zh: '全球最大分子筛生产国，中石化催化剂、齐鲁石化及民营企业(ZSM-5/Y型)产能快速扩张。', desc_en: 'World\'s largest zeolite producer. Sinopec, Qilu Petrochemical and private firms rapidly expanding ZSM-5/Y capacity.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '18%', flag: '🇺🇸', desc_zh: 'UOP(Honeywell)、Grace、BASF为FCC分子筛催化剂全球领先供应商。', desc_en: 'UOP(Honeywell), Grace, BASF are leading global FCC zeolite catalyst suppliers.' },
+      { code: '276', name_zh: '德国', name_en: 'Germany', rank: 3, share: '8%', flag: '🇩🇪', desc_zh: 'BASF Ludwigshafen及Clariant为欧洲分子筛核心产地。', desc_en: 'BASF Ludwigshafen and Clariant are core European zeolite producers.' },
+      { code: '392', name_zh: '日本', name_en: 'Japan', rank: 4, share: '7%', flag: '🇯🇵', desc_zh: '东曹(Tosoh)、日挥触媒化成生产高性能分子筛催化剂。', desc_en: 'Tosoh and JGC Catalyst produce high-performance zeolite catalysts.' },
+      { code: '528', name_zh: '荷兰', name_en: 'Netherlands', rank: 5, share: '5%', flag: '🇳🇱', desc_zh: 'Albemarle和Johnson Matthey荷兰工厂供应欧洲市场。', desc_en: 'Albemarle and Johnson Matthey Netherlands plants supply European market.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 6, share: '4%', flag: '🇮🇳', desc_zh: '印度炼油产能扩张推动FCC分子筛需求增长。', desc_en: 'Indian refining capacity expansion drives FCC zeolite demand growth.' },
+      { code: '410', name_zh: '韩国', name_en: 'South Korea', rank: 7, share: '3%', flag: '🇰🇷', desc_zh: 'SK Innovation关联催化剂企业产能增加。', desc_en: 'SK Innovation-affiliated catalyst firms increasing capacity.' },
+      { code: '682', name_zh: '沙特阿拉伯', name_en: 'Saudi Arabia', rank: 8, share: '3%', flag: '🇸🇦', desc_zh: 'Saudi Aramco催化剂研发中心推动本地化生产。', desc_en: 'Saudi Aramco catalyst R&D center driving localization.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 9, share: '2%', flag: '🇨🇦', desc_zh: '炼油催化材料需求稳定增长。', desc_en: 'Stable growth in refining catalyst material demand.' },
+      { code: '076', name_zh: '巴西', name_en: 'Brazil', rank: 10, share: '2%', flag: '🇧🇷', desc_zh: 'Petrobras催化剂供应链本地化推进中。', desc_en: 'Petrobras catalyst supply chain localization advancing.' }
+    ]
+  },
+  'sio2-support': {
+    name_zh: '二氧化硅载体', name_en: 'Silica Support',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '45%', flag: '🇨🇳', desc_zh: '全球最大高纯SiO2载体生产国，青岛海洋化工、淄博化工及催化剂企业为主力。', desc_en: 'World\'s largest high-purity SiO2 support producer. Qingdao Marine Chemical, Zibo chemical and catalyst firms lead.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '18%', flag: '🇺🇸', desc_zh: 'Grace Davison(W.R.Grace)及PQ Corporation为高纯硅载体全球领先企业。', desc_en: 'Grace Davison(W.R.Grace) and PQ Corporation are global leaders in high-purity silica supports.' },
+      { code: '276', name_zh: '德国', name_en: 'Germany', rank: 3, share: '12%', flag: '🇩🇪', desc_zh: 'Evonik及BASF为欧洲高纯硅载体核心供应商。', desc_en: 'Evonik and BASF are core European high-purity silica support suppliers.' },
+      { code: '392', name_zh: '日本', name_en: 'Japan', rank: 4, share: '10%', flag: '🇯🇵', desc_zh: '富士硅化学(Fuji Silysia)及东ソー生产催化剂级高纯硅载体。', desc_en: 'Fuji Silysia and Tosoh produce catalyst-grade high-purity silica supports.' },
+      { code: '528', name_zh: '荷兰', name_en: 'Netherlands', rank: 5, share: '5%', flag: '🇳🇱', desc_zh: 'AkzoNobel(现Nouryon)催化剂载体工厂。', desc_en: 'AkzoNobel(now Nouryon) catalyst support plant.' },
+      { code: '826', name_zh: '英国', name_en: 'United Kingdom', rank: 6, share: '3%', flag: '🇬🇧', desc_zh: 'Johnson Matthey关联硅载体生产设施。', desc_en: 'Johnson Matthey-affiliated silica support production facilities.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 7, share: '3%', flag: '🇮🇳', desc_zh: '印度催化剂材料企业逐步扩大高纯硅载体产能。', desc_en: 'Indian catalyst material firms gradually expanding high-purity silica support capacity.' },
+      { code: '410', name_zh: '韩国', name_en: 'South Korea', rank: 8, share: '2%', flag: '🇰🇷', desc_zh: '韩国化工企业供应本地催化剂制造商。', desc_en: 'Korean chemical firms supply local catalyst manufacturers.' },
+      { code: '250', name_zh: '法国', name_en: 'France', rank: 9, share: '1.5%', flag: '🇫🇷', desc_zh: 'Axens(IFP Energies Nouvelles)催化剂载体生产。', desc_en: 'Axens(IFP Energies Nouvelles) catalyst support production.' },
+      { code: '076', name_zh: '巴西', name_en: 'Brazil', rank: 10, share: '1.5%', flag: '🇧🇷', desc_zh: '新兴催化剂材料市场，产能增长中。', desc_en: 'Emerging catalyst material market with growing capacity.' }
+    ]
+  },
+  'mo': {
+    name_zh: '钼', name_en: 'Molybdenum',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '45%', flag: '🇨🇳', desc_zh: '全球最大钼生产国，河南栾川及陕西金堆城为全球最重要钼矿区，钼精矿(45%Mo)年产量超10万吨。', desc_en: 'World\'s largest Mo producer. Henan Luanchuan and Shaanxi Jinduicheng are the most important Mo districts globally.' },
+      { code: '152', name_zh: '智利', name_en: 'Chile', rank: 2, share: '18%', flag: '🇨🇱', desc_zh: '全球第二大钼生产国，主要作为铜矿伴生产品。Codelco旗下多个矿山产出钼。', desc_en: 'Second largest Mo producer, mainly as copper byproduct. Codelco operates multiple Mo-producing mines.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 3, share: '12%', flag: '🇺🇸', desc_zh: 'Freeport-McMoRan旗下Climax及Henderson矿山为美国主要钼生产商。', desc_en: 'Freeport-McMoRan\'s Climax and Henderson mines are the primary US Mo producers.' },
+      { code: '604', name_zh: '秘鲁', name_en: 'Peru', rank: 4, share: '8%', flag: '🇵🇪', desc_zh: '铜矿伴生钼产出，Antamina及Toquepala为主要来源。', desc_en: 'Copper byproduct Mo production. Antamina and Toquepala are major sources.' },
+      { code: '484', name_zh: '墨西哥', name_en: 'Mexico', rank: 5, share: '5%', flag: '🇲🇽', desc_zh: 'La Caridad矿山为墨西哥主要钼产地。', desc_en: 'La Caridad mine is Mexico\'s primary Mo source.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 6, share: '4%', flag: '🇷🇺', desc_zh: 'Sorsk及Tyrnyauz钼矿为俄罗斯主要产地。', desc_en: 'Sorsk and Tyrnyauz Mo mines are Russia\'s main producers.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 7, share: '3%', flag: '🇦🇺', desc_zh: '铜矿伴生钼产出有限但稳定。', desc_en: 'Limited but stable copper byproduct Mo production.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 8, share: '2.5%', flag: '🇨🇦', desc_zh: 'Highland Valley铜矿伴生钼产出。', desc_en: 'Highland Valley copper mine byproduct Mo.' },
+      { code: '398', name_zh: '哈萨克斯坦', name_en: 'Kazakhstan', rank: 9, share: '1.5%', flag: '🇰🇿', desc_zh: 'Kounrad及Zhanet钼矿生产。', desc_en: 'Kounrad and Zhanet Mo mine production.' },
+      { code: '496', name_zh: '蒙古', name_en: 'Mongolia', rank: 10, share: '1%', flag: '🇲🇳', desc_zh: 'Erdenet铜钼矿为蒙古主要钼来源。', desc_en: 'Erdenet Cu-Mo mine is Mongolia\'s primary Mo source.' }
+    ]
+  },
+  'co': {
+    name_zh: '钴', name_en: 'Cobalt',
+    countries: [
+      { code: '180', name_zh: '刚果(金)', name_en: 'DRC', rank: 1, share: '73%', flag: '🇨🇩', desc_zh: '全球绝对主导钴供应国，Kamoto及Tenke Fungurume等矿山年产出超10万吨钴精矿。手工采矿(ASM)占约20%产量。', desc_en: 'Absolutely dominant global Co supplier. Kamoto and Tenke Fungurume mines produce over 100K tonnes. ASM accounts for ~20%.' },
+      { code: '360', name_zh: '印度尼西亚', name_en: 'Indonesia', rank: 2, share: '7%', flag: '🇮🇩', desc_zh: 'HPAL高压酸浸工艺推动镍钴联合生产快速增长，Morowali工业园钴产能持续释放。', desc_en: 'HPAL process drives rapid nickel-cobalt co-production growth. Morowali industrial park Co capacity expanding.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 3, share: '4%', flag: '🇷🇺', desc_zh: 'Norilsk Nickel旗下矿山产出镍钴精矿。', desc_en: 'Norilsk Nickel mines produce nickel-cobalt concentrates.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 4, share: '3.5%', flag: '🇨🇦', desc_zh: '镍矿伴生钴产出，Glencore及Vale加拿大业务为主要来源。', desc_en: 'Nickel byproduct Co. Glencore and Vale Canada operations are primary sources.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 5, share: '3%', flag: '🇦🇺', desc_zh: 'Murrin Murrin镍钴矿及Mt Thirsty钴项目。', desc_en: 'Murrin Murrin Ni-Co operation and Mt Thirsty Co project.' },
+      { code: '604', name_zh: '秘鲁', name_en: 'Peru', rank: 6, share: '2.5%', flag: '🇵🇪', desc_zh: '铜矿伴生钴产出。', desc_en: 'Copper byproduct Co production.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 7, share: '2%', flag: '🇺🇸', desc_zh: 'Minnesota及Missouri钴矿项目推进中。', desc_en: 'Minnesota and Missouri Co mine projects advancing.' },
+      { code: '646', name_zh: '卢旺达', name_en: 'Rwanda', rank: 8, share: '1.5%', flag: '🇷🇼', desc_zh: '小规模钴矿开采，供应链可追溯性关注度高。', desc_en: 'Small-scale Co mining, high supply chain traceability focus.' },
+      { code: '586', name_zh: '巴基斯坦', name_en: 'Pakistan', rank: 9, share: '1%', flag: '🇵🇰', desc_zh: 'Reko Diq铜金矿伴生钴资源。', desc_en: 'Reko Diq Cu-Au mine byproduct Co resources.' },
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 10, share: '1%', flag: '🇨🇳', desc_zh: '国内钴矿产量有限，但冶炼加工能力全球第一，约80%全球钴精矿在中国精炼。', desc_en: 'Limited domestic Co mining, but world\'s #1 refining capacity. ~80% of global Co concentrate refined in China.' }
+    ]
+  },
+  'ni': {
+    name_zh: '镍', name_en: 'Nickel',
+    countries: [
+      { code: '360', name_zh: '印度尼西亚', name_en: 'Indonesia', rank: 1, share: '52%', flag: '🇮🇩', desc_zh: '全球最大镍生产国，Morowali及Wedaby工业园RKEF及HPAL产能持续扩张，主导全球镍供应格局。', desc_en: 'World\'s largest Ni producer. Morowali and Wedaby industrial parks expanding RKEF and HPAL capacity, dominating global supply.' },
+      { code: '608', name_zh: '菲律宾', name_en: 'Philippines', rank: 2, share: '12%', flag: '🇵🇭', desc_zh: '全球第二大镍矿出口国，主要向中国出口镍矿石。季节性雨季影响开采。', desc_en: 'Second largest Ni ore exporter, mainly to China. Seasonal rainfall affects mining.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 3, share: '8%', flag: '🇷🇺', desc_zh: 'Norilsk Nickel为全球最大一级镍生产商，受地缘政治影响供应格局变化。', desc_en: 'Norilsk Nickel is the world\'s largest Class 1 Ni producer. Geopolitics affecting supply dynamics.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 4, share: '5%', flag: '🇨🇦', desc_zh: 'Sudbury及Thompson矿区为传统镍产地，Vale及Glencore为主要运营商。', desc_en: 'Sudbury and Thompson mining areas are traditional Ni producers. Vale and Glencore are major operators.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 5, share: '4.5%', flag: '🇦🇺', desc_zh: 'Murrin Murrin及Kalgoorlie镍冶炼厂，BHP及First Quantum运营。', desc_en: 'Murrin Murrin and Kalgoorlie Ni smelters. BHP and First Quantum operate.' },
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 6, share: '4%', flag: '🇨🇳', desc_zh: '国内镍矿产量有限(甘肃金川为主)，但镍铁(NPI)冶炼产能全球领先。', desc_en: 'Limited domestic Ni mining(Gansu Jinchuan main), but world-leading NPI smelting capacity.' },
+      { code: '540', name_zh: '新喀里多尼亚', name_en: 'New Caledonia', rank: 7, share: '3.5%', flag: '🇳🇨', desc_zh: '法国海外领地，红土型镍矿资源丰富，Vale/KNS/Goro运营。', desc_en: 'French territory with rich laterite Ni resources. Vale/KNS/Goro operate.' },
+      { code: '076', name_zh: '巴西', name_en: 'Brazil', rank: 8, share: '3%', flag: '🇧🇷', desc_zh: 'Vale巴西镍业务(Atlantic Nickel)持续运营。', desc_en: 'Vale Brazil Ni operations(Atlantic Nickel) continuing.' },
+      { code: '192', name_zh: '古巴', name_en: 'Cuba', rank: 9, share: '2.5%', flag: '🇨🇺', desc_zh: 'Moa Bay镍钴矿历史悠久，产量下降但仍有产出。', desc_en: 'Moa Bay Ni-Co mine with long history, declining but still producing.' },
+      { code: '710', name_zh: '南非', name_en: 'South Africa', rank: 10, share: '2%', flag: '🇿🇦', desc_zh: 'Bushveld杂岩体镍矿资源开发。', desc_en: 'Bushveld Complex Ni resource development.' }
+    ]
+  },
+  'w': {
+    name_zh: '钨', name_en: 'Tungsten',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '82%', flag: '🇨🇳', desc_zh: '全球绝对主导钨供应国。江西大余、湖南郴州及福建龙岩为全球最重要钨矿区，开采总量控制政策下年产WO3约8万吨。', desc_en: 'Absolutely dominant global W supplier. Jiangxi Dayu, Hunan Chenzhou and Fujian Longyan are world\'s most important W districts. Annual WO3 ~80K tonnes under quota control.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 2, share: '4%', flag: '🇷🇺', desc_zh: 'Primorsky及Zabaykalsky地区钨矿开采，产量受限于投资不足。', desc_en: 'Tungsten mining in Primorsky and Zabaykalsky regions. Production limited by underinvestment.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 3, share: '3%', flag: '🇺🇸', desc_zh: 'North American Tungsten及Climax钨矿少量复产，国防战略储备需求推动。', desc_en: 'North American Tungsten and Climax mine limited restart. Defense strategic reserve demand driving.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 4, share: '2.5%', flag: '🇨🇦', desc_zh: 'North American Tungsten旗下Cantung矿山(已停产)及新项目评估中。', desc_en: 'Cantung mine(mothballed) and new project evaluations.' },
+      { code: '104', name_zh: '缅甸', name_en: 'Myanmar', rank: 5, share: '2%', flag: '🇲🇲', desc_zh: '中缅边境地区小规模钨矿开采。', desc_en: 'Small-scale W mining in China-Myanmar border areas.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 6, share: '2%', flag: '🇦🇺', desc_zh: 'Dolphin Tungsten(King Island)项目重启。', desc_en: 'Dolphin Tungsten(King Island) project restart.' },
+      { code: '826', name_zh: '英国', name_en: 'United Kingdom', rank: 7, share: '1.5%', flag: '🇬🇧', desc_zh: 'Hemerdon钨矿(现Tungsten West)项目评估重启中。', desc_en: 'Hemerdon W mine(now Tungsten West) restart evaluation.' },
+      { code: '724', name_zh: '西班牙', name_en: 'Spain', rank: 8, share: '1%', flag: '🇪🇸', desc_zh: 'Barruecopardo钨矿项目(Ormonde Mining)开发中。', desc_en: 'Barruecopardo W project(Ormonde Mining) under development.' },
+      { code: '620', name_zh: '葡萄牙', name_en: 'Portugal', rank: 9, share: '0.8%', flag: '🇵🇹', desc_zh: 'Panasqueira钨矿历史悠久，持续小规模开采。', desc_en: 'Panasqueira W mine with long history, continuing small-scale operations.' },
+      { code: '704', name_zh: '越南', name_en: 'Vietnam', rank: 10, share: '0.7%', flag: '🇻🇳', desc_zh: 'Nui Phao多金属矿含钨资源。', desc_en: 'Nui Phao polymetallic mine contains W resources.' }
+    ]
+  },
+  'ti-compound': {
+    name_zh: '钛化合物', name_en: 'Titanium Compounds',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '42%', flag: '🇨🇳', desc_zh: '全球最大钛白粉生产国，龙佰集团、中核钛白为龙头企业。氯化法及硫酸法两条工艺路线并行。', desc_en: 'World\'s largest TiO2 producer. Lomon Billions and CNNC Titanium are leaders. Both chloride and sulfate processes.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '15%', flag: '🇺🇸', desc_zh: 'Chemours(原DuPont钛白粉)及Tronox为主要TiO2生产商。', desc_en: 'Chemours(formerly DuPont TiO2) and Tronox are major TiO2 producers.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 3, share: '10%', flag: '🇦🇺', desc_zh: '全球最大钛铁矿及金红石矿产国，Iluka Resources及Tronox为主要矿商。', desc_en: 'World\'s largest ilmenite and rutile miner. Iluka Resources and Tronox are major miners.' },
+      { code: '710', name_zh: '南非', name_en: 'South Africa', rank: 4, share: '8%', flag: '🇿🇦', desc_zh: 'Richards Bay Minerals(RBM, Rio Tinto)为全球重要钛铁矿产地。', desc_en: 'Richards Bay Minerals(RBM, Rio Tinto) is a major global ilmenite producer.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 5, share: '6%', flag: '🇨🇦', desc_zh: 'Rio Tinto Fer et Titane(Quebec)为全球重要钛渣生产商。', desc_en: 'Rio Tinto Fer et Titane(Quebec) is a major global titanium slag producer.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 6, share: '5%', flag: '🇮🇳', desc_zh: 'Indian Rare Earths(IREL)开采海岸砂矿钛铁矿。', desc_en: 'IREL mines coastal ilmenite sands.' },
+      { code: '578', name_zh: '挪威', name_en: 'Norway', rank: 7, share: '4%', flag: '🇳🇴', desc_zh: 'Kronos Titania矿山(Tellnes)为欧洲重要钛铁矿来源。', desc_en: 'Kronos Titania mine(Tellnes) is a key European ilmenite source.' },
+      { code: '804', name_zh: '乌克兰', name_en: 'Ukraine', rank: 8, share: '3%', flag: '🇺🇦', desc_zh: 'Vilnohirskyi钛矿为欧洲重要钛资源产地。', desc_en: 'Vilnohirskyi Ti mine is a key European Ti resource source.' },
+      { code: '392', name_zh: '日本', name_en: 'Japan', rank: 9, share: '3%', flag: '🇯🇵', desc_zh: '石原产业(ISK)及堺化学为高端TiO2专业生产商。', desc_en: 'Ishihara Sangyo(ISK) and Sakai Chemical specialize in high-end TiO2.' },
+      { code: '484', name_zh: '墨西哥', name_en: 'Mexico', rank: 10, share: '2%', flag: '🇲🇽', desc_zh: 'Tronox墨西哥钛铁矿业务。', desc_en: 'Tronox Mexico ilmenite operations.' }
+    ]
+  },
+  'mgcl2': {
+    name_zh: '氯化镁', name_en: 'Magnesium Chloride',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '60%', flag: '🇨🇳', desc_zh: '全球最大MgCl2生产国，山东及青海察尔汗盐湖为主要来源。无水氯化镁高纯品用于催化剂载体。', desc_en: 'World\'s largest MgCl2 producer. Shandong and Qinghai Qarhan Salt Lake are primary sources. Anhydrous high-purity grade for catalyst supports.' },
+      { code: '376', name_zh: '以色列', name_en: 'Israel', rank: 2, share: '12%', flag: '🇮🇱', desc_zh: '死海盐化工(ICL集团)为全球重要MgCl2供应商。', desc_en: 'Dead Sea Salt Works(ICL Group) is a major global MgCl2 supplier.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 3, share: '8%', flag: '🇺🇸', desc_zh: 'Great Salt Lake Minerals及化工企业生产MgCl2。', desc_en: 'Great Salt Lake Minerals and chemical firms produce MgCl2.' },
+      { code: '276', name_zh: '德国', name_en: 'Germany', rank: 4, share: '6%', flag: '🇩🇪', desc_zh: 'K+S及Chemieprodukte Langelsheim为欧洲MgCl2专业供应商。', desc_en: 'K+S and Chemieprodukte Langelsheim are specialized European MgCl2 suppliers.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 5, share: '4%', flag: '🇦🇺', desc_zh: '盐湖卤水提镁项目产能增长。', desc_en: 'Salt lake brine Mg extraction projects growing.' },
+      { code: '392', name_zh: '日本', name_en: 'Japan', rank: 6, share: '3%', flag: '🇯🇵', desc_zh: '海水提镁及化工企业小规模生产。', desc_en: 'Seawater Mg extraction and small-scale chemical production.' },
+      { code: '826', name_zh: '英国', name_en: 'United Kingdom', rank: 7, share: '2.5%', flag: '🇬🇧', desc_zh: 'Premier Magnesia及化工企业MgCl2生产。', desc_en: 'Premier Magnesia and chemical firms MgCl2 production.' },
+      { code: '528', name_zh: '荷兰', name_en: 'Netherlands', rank: 8, share: '2%', flag: '🇳🇱', desc_zh: 'Nedmag工业矿物MgCl2生产。', desc_en: 'Nedmag industrial minerals MgCl2 production.' },
+      { code: '643', name_zh: '俄罗斯', name_en: 'Russia', rank: 9, share: '1.5%', flag: '🇷🇺', desc_zh: '乌拉尔地区镁化工产能。', desc_en: 'Ural region Mg chemical capacity.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 10, share: '1%', flag: '🇨🇦', desc_zh: 'Magnesita加拿大业务MgCl2副产。', desc_en: 'Magnesita Canada MgCl2 byproduct.' }
+    ]
+  },
+  'zr-metallocene': {
+    name_zh: '锆茂金属', name_en: 'Zirconium Metallocene',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '35%', flag: '🇨🇳', desc_zh: '茂金属催化剂核心组分Cp2ZrCl2国产化加速，中科院化学所及万华化学等实现工业化生产。', desc_en: 'Accelerating domestic production of Cp2ZrCl2 for metallocene catalysts. CAS Chemistry Institute and Wanhua Chemical industrializing.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '20%', flag: '🇺🇸', desc_zh: 'ExxonMobil Chemical及Univation(Technologies)为茂金属催化剂全球领先企业。', desc_en: 'ExxonMobil Chemical and Univation Technologies are global leaders in metallocene catalysts.' },
+      { code: '276', name_zh: '德国', name_en: 'Germany', rank: 3, share: '15%', flag: '🇩🇪', desc_zh: 'BASF及Lanxess(原Bayer)为茂金属催化剂欧洲核心供应商。', desc_en: 'BASF and Lanxess(formerly Bayer) are core European metallocene catalyst suppliers.' },
+      { code: '392', name_zh: '日本', name_en: 'Japan', rank: 4, share: '12%', flag: '🇯🇵', desc_zh: '三井化学(Mitsui Chemicals)及东曹(Tosoh)为茂金属催化剂亚太重要生产商。', desc_en: 'Mitsui Chemicals and Tosoh are key Asia-Pacific metallocene catalyst producers.' },
+      { code: '826', name_zh: '英国', name_en: 'United Kingdom', rank: 5, share: '5%', flag: '🇬🇧', desc_zh: 'Johnson Matthey及Innospec催化剂部门茂金属研发生产。', desc_en: 'Johnson Matthey and Innospec catalyst divisions for metallocene R&D and production.' },
+      { code: '410', name_zh: '韩国', name_en: 'South Korea', rank: 6, share: '4%', flag: '🇰🇷', desc_zh: '韩国化工企业茂金属催化剂产能增长。', desc_en: 'Korean chemical firms growing metallocene catalyst capacity.' },
+      { code: '250', name_zh: '法国', name_en: 'France', rank: 7, share: '3%', flag: '🇫🇷', desc_zh: 'TotalEnergies关联催化剂企业。', desc_en: 'TotalEnergies-affiliated catalyst firms.' },
+      { code: '380', name_zh: '意大利', name_en: 'Italy', rank: 8, share: '2.5%', flag: '🇮🇹', desc_zh: 'Versalis(Eni)茂金属聚烯烃催化剂。', desc_en: 'Versalis(Eni) metallocene polyolefin catalysts.' },
+      { code: '528', name_zh: '荷兰', name_en: 'Netherlands', rank: 9, share: '2%', flag: '🇳🇱', desc_zh: 'LyondellBasell关联催化剂研发。', desc_en: 'LyondellBasell-affiliated catalyst R&D.' },
+      { code: '124', name_zh: '加拿大', name_en: 'Canada', rank: 10, share: '1.5%', flag: '🇨🇦', desc_zh: 'NOVA Chemicals茂金属催化剂应用。', desc_en: 'NOVA Chemicals metallocene catalyst applications.' }
+    ]
+  },
+  'tio2': {
+    name_zh: '钛白粉(R型)', name_en: 'TiO2 (Rutile)',
+    countries: [
+      { code: '156', name_zh: '中国', name_en: 'China', rank: 1, share: '45%', flag: '🇨🇳', desc_zh: '全球最大钛白粉生产国，龙佰集团(LB Group)为全球第一大钛白粉企业，年产能超150万吨。', desc_en: 'World\'s largest TiO2 producer. Lomon Billions(LB Group) is the world\'s #1 TiO2 company, capacity over 1.5M tonnes/year.' },
+      { code: '840', name_zh: '美国', name_en: 'United States', rank: 2, share: '13%', flag: '🇺🇸', desc_zh: 'Chemours及Tronox为美国主要金红石型钛白粉生产商。', desc_en: 'Chemours and Tronox are the primary US rutile TiO2 producers.' },
+      { code: '036', name_zh: '澳大利亚', name_en: 'Australia', rank: 3, share: '9%', flag: '🇦🇺', desc_zh: '全球最大钛铁矿砂矿出口国，Iluka及Tronox为主要矿商。', desc_en: 'World\'s largest ilmenite sand exporter. Iluka and Tronox are major miners.' },
+      { code: '276', name_zh: '德国', name_en: 'Germany', rank: 4, share: '7%', flag: '🇩🇪', desc_zh: 'Kronos(Vibrant)德国工厂为欧洲核心钛白粉产地。', desc_en: 'Kronos(Vibrant) German plants are core European TiO2 production sites.' },
+      { code: '826', name_zh: '英国', name_en: 'United Kingdom', rank: 5, share: '5%', flag: '🇬🇧', desc_zh: 'Tronox UK(原Tioxide)工厂历史悠久。', desc_en: 'Tronox UK(formerly Tioxide) plant with long history.' },
+      { code: '392', name_zh: '日本', name_en: 'Japan', rank: 6, share: '5%', flag: '🇯🇵', desc_zh: '石原产业(ISK)为全球高端金红石型钛白粉领导者。', desc_en: 'Ishihara Sangyo(ISK) is a global leader in high-end rutile TiO2.' },
+      { code: '356', name_zh: '印度', name_en: 'India', rank: 7, share: '4%', flag: '🇮🇳', desc_zh: 'Kerala Minerals & Metals(KMML)为印度主要钛白粉生产商。', desc_en: 'Kerala Minerals & Metals(KMML) is India\'s primary TiO2 producer.' },
+      { code: '710', name_zh: '南非', name_en: 'South Africa', rank: 8, share: '4%', flag: '🇿🇦', desc_zh: 'Richards Bay Minerals钛铁矿供应全球钛白粉原料。', desc_en: 'Richards Bay Minerals ilmenite supplies global TiO2 feedstock.' },
+      { code: '724', name_zh: '西班牙', name_en: 'Spain', rank: 9, share: '3%', flag: '🇪🇸', desc_zh: 'Kronos西班牙工厂供应欧洲涂料市场。', desc_en: 'Kronos Spain plant supplies European coatings market.' },
+      { code: '484', name_zh: '墨西哥', name_en: 'Mexico', rank: 10, share: '2%', flag: '🇲🇽', desc_zh: 'Tronox墨西哥钛白粉生产设施。', desc_en: 'Tronox Mexico TiO2 production facilities.' }
+    ]
+  }
+};
+
+// ===== STATE =====
+let currentCommodity = 'la2o3';
+let currentLang = localStorage.getItem('lang') || 'zh';
+let currentTheme = localStorage.getItem('theme') || 'dark';
+let worldData = null;
+let svg, g, projection, path, zoom;
+let highlightedCountry = null;
+
+// ===== THEME =====
+function applyTheme(theme) {
+  currentTheme = theme;
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.classList.add('dark');
+  }
+  try { localStorage.setItem('theme', theme); } catch(e) {}
+  const btn = document.querySelector('.theme-toggle');
+  if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+  if (svg) updateMapColors();
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+}
+
+// ===== LANGUAGE =====
+function applyLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.querySelectorAll('[data-zh]').forEach(el => {
+    const text = el.getAttribute('data-' + lang);
+    if (text) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = text;
+      } else {
+        el.textContent = text;
+      }
+    }
+  });
+  // Re-render dynamic elements
+  renderPills();
+  renderSidebar();
+  updateLegendColors();
+}
+
+function toggleLang() {
+  applyLang(currentLang === 'zh' ? 'en' : 'zh');
+}
+
+// ===== PILLS =====
+function renderPills() {
+  const group = document.getElementById('pillGroup');
+  group.innerHTML = '';
+  commodities.forEach(c => {
+    const pill = document.createElement('button');
+    pill.className = 'pill' + (c.id === currentCommodity ? ' active' : '');
+    if (c.id === currentCommodity) {
+      pill.style.background = c.color;
+    }
+    pill.innerHTML = `<span class="pill-dot" style="background:${c.color}"></span>${currentLang === 'zh' ? c.name_zh : c.name_en}`;
+    pill.onclick = () => selectCommodity(c.id);
+    group.appendChild(pill);
+  });
+}
+
+// ===== SELECT COMMODITY =====
+function selectCommodity(id) {
+  currentCommodity = id;
+  highlightedCountry = null;
+  renderPills();
+  updateMapColors();
+  renderSidebar();
+  updateLegendColors();
+  updateSidebarHeader();
+}
+
+// ===== SIDEBAR HEADER =====
+function updateSidebarHeader() {
+  const c = commodities.find(x => x.id === currentCommodity);
+  const d = productionData[currentCommodity];
+  document.getElementById('sidebarDot').style.background = c.color;
+  const nameEl = document.getElementById('sidebarName');
+  nameEl.setAttribute('data-zh', d.name_zh);
+  nameEl.setAttribute('data-en', d.name_en);
+  nameEl.textContent = currentLang === 'zh' ? d.name_zh : d.name_en;
+}
+
+// ===== SIDEBAR =====
+function renderSidebar() {
+  const list = document.getElementById('countryList');
+  const data = productionData[currentCommodity];
+  const c = commodities.find(x => x.id === currentCommodity);
+  list.innerHTML = '';
+
+  data.countries.forEach(country => {
+    const card = document.createElement('div');
+    card.className = 'country-card';
+    card.setAttribute('data-code', country.code);
+    if (highlightedCountry === country.code) card.classList.add('highlighted');
+
+    card.innerHTML = `
+      <div class="country-rank ${country.rank <= 3 ? 'top3' : ''}">${country.rank}</div>
+      <div class="country-info">
+        <div class="country-name-row">
+          <span class="country-flag">${country.flag || ''}</span>
+          <span class="country-name">${currentLang === 'zh' ? country.name_zh : country.name_en}</span>
+          <span class="country-share">${country.share}</span>
+        </div>
+        <div class="country-desc">${currentLang === 'zh' ? country.desc_zh : country.desc_en}</div>
+      </div>
+    `;
+
+    card.addEventListener('mouseenter', () => {
+      highlightCountryOnMap(country.code);
+    });
+    card.addEventListener('mouseleave', () => {
+      unhighlightCountryOnMap();
+    });
+    card.addEventListener('click', () => {
+      card.classList.toggle('expanded');
+    });
+
+    list.appendChild(card);
+  });
+}
+
+// ===== MAP HIGHLIGHT =====
+function highlightCountryOnMap(code) {
+  highlightedCountry = code;
+  if (!g) return;
+  g.selectAll('.country-path')
+    .transition().duration(150)
+    .style('opacity', function() {
+      return d3.select(this).attr('data-id') === code ? 1 : 0.35;
+    })
+    .style('stroke-width', function() {
+      return d3.select(this).attr('data-id') === code ? '2px' : '0.5px';
+    });
+}
+
+function unhighlightCountryOnMap() {
+  highlightedCountry = null;
+  if (!g) return;
+  g.selectAll('.country-path')
+    .transition().duration(150)
+    .style('opacity', 1)
+    .style('stroke-width', '0.5px');
+}
+
+// ===== LEGEND =====
+function updateLegendColors() {
+  const c = commodities.find(x => x.id === currentCommodity);
+  const color = c.color;
+  document.getElementById('legendTop').style.background = color;
+  document.getElementById('legendMid').style.background = color + '80';
+  document.getElementById('legendLow').style.background = color + '4D';
+}
+
+// ===== MAP COLOR =====
+function getCountryColor(countryId) {
+  const data = productionData[currentCommodity];
+  const c = commodities.find(x => x.id === currentCommodity);
+  const country = data.countries.find(co => co.code === String(countryId));
+  if (!country) return getComputedStyle(document.documentElement).getPropertyValue('--map-land').trim() || '#27272a';
+  const color = c.color;
+  if (country.rank <= 3) return color;
+  if (country.rank <= 7) return color + '80';
+  return color + '4D';
+}
+
+function getCountryData(countryId) {
+  const data = productionData[currentCommodity];
+  return data.countries.find(co => co.code === String(countryId));
+}
+
+// ===== MAP UPDATE =====
+function updateMapColors() {
+  if (!g) return;
+  g.selectAll('.country-path')
+    .transition().duration(500)
+    .attr('fill', function() {
+      return getCountryColor(d3.select(this).attr('data-id'));
+    });
+}
+
+// ===== INIT MAP =====
+async function initMap() {
+  const container = document.getElementById('mapContainer');
+  const loading = document.getElementById('mapLoading');
+
+  try {
+    const response = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    worldData = await response.json();
+  } catch(e) {
+    loading.innerHTML = '<span style="color:var(--accent-red);">Failed to load map data. Please check your internet connection.</span>';
+    return;
+  }
+
+  loading.style.display = 'none';
+  document.getElementById('mapLegend').style.display = 'block';
+
+  const rect = container.getBoundingClientRect();
+  const width = rect.width;
+  const height = Math.max(rect.height, 520);
+
+  projection = d3.geoNaturalEarth1()
+    .scale(width / 5.5)
+    .translate([width / 2, height / 2]);
+
+  path = d3.geoPath(projection);
+
+  svg = d3.select('#mapContainer')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height)
+    .style('background', 'var(--map-ocean)');
+
+  // Zoom behavior
+  zoom = d3.zoom()
+    .scaleExtent([1, 8])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform);
+    });
+
+  svg.call(zoom);
+
+  g = svg.append('g');
+
+  const countries = topojson.feature(worldData, worldData.objects.countries);
+
+  // Tooltip
+  const tooltip = document.getElementById('mapTooltip');
+
+  g.selectAll('.country-path')
+    .data(countries.features)
+    .enter()
+    .append('path')
+    .attr('class', 'country-path')
+    .attr('d', path)
+    .attr('data-id', d => d.id)
+    .attr('fill', d => getCountryColor(d.id))
+    .attr('stroke', 'var(--map-border-line)')
+    .attr('stroke-width', 0.5)
+    .on('mouseover', function(event, d) {
+      const countryInfo = getCountryData(d.id);
+      if (countryInfo) {
+        d3.select(this)
+          .style('stroke', 'var(--text-primary)')
+          .style('stroke-width', '1.5px');
+
+        const name = currentLang === 'zh' ? countryInfo.name_zh : countryInfo.name_en;
+        tooltip.innerHTML = `
+          <div class="tooltip-country">${countryInfo.flag || ''} ${name}</div>
+          <div class="tooltip-row"><span>${currentLang === 'zh' ? '排名' : 'Rank'}</span><span>#${countryInfo.rank}</span></div>
+          <div class="tooltip-row"><span>${currentLang === 'zh' ? '全球份额' : 'Global Share'}</span><span>${countryInfo.share}</span></div>
+        `;
+        tooltip.style.opacity = 1;
+      }
+    })
+    .on('mousemove', function(event) {
+      const containerRect = container.getBoundingClientRect();
+      let x = event.clientX - containerRect.left + 16;
+      let y = event.clientY - containerRect.top - 10;
+      if (x + 200 > containerRect.width) x = x - 220;
+      if (y + 100 > containerRect.height) y = y - 100;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    })
+    .on('mouseout', function() {
+      d3.select(this)
+        .style('stroke', 'var(--map-border-line)')
+        .style('stroke-width', '0.5px');
+      tooltip.style.opacity = 0;
+    });
+
+  // Add graticule
+  const graticule = d3.geoGraticule10();
+  g.insert('path', ':first-child')
+    .datum(graticule)
+    .attr('d', path)
+    .attr('fill', 'none')
+    .attr('stroke', 'var(--map-border-line)')
+    .attr('stroke-width', 0.2)
+    .attr('stroke-opacity', 0.3);
+
+  // Handle resize
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resizeMap, 250);
+  });
+}
+
+function resizeMap() {
+  if (!svg || !worldData) return;
+  const container = document.getElementById('mapContainer');
+  const rect = container.getBoundingClientRect();
+  const width = rect.width;
+  const height = Math.max(rect.height, 520);
+
+  projection.scale(width / 5.5).translate([width / 2, height / 2]);
+
+  svg.attr('width', width).attr('height', height);
+  g.selectAll('.country-path').attr('d', path);
+  g.selectAll('path').filter(function() { return !d3.select(this).classed('country-path'); }).attr('d', path);
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(currentTheme);
+  applyLang(currentLang);
+  renderPills();
+  renderSidebar();
+  updateSidebarHeader();
+  updateLegendColors();
+  initMap();
+});
+</script>
+
+</body>
+</html>
