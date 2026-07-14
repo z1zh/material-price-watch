@@ -7,6 +7,8 @@ RUN npm ci --production
 
 COPY . .
 
-EXPOSE 3333
+EXPOSE 8080
+
+ENV PORT=8080
 
 CMD ["node", "server.js"]
