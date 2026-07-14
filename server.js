@@ -169,8 +169,8 @@ app.get('/map', (req, res) => {
 
 const PORT = process.env.PORT || 3333;
 
-server.listen(PORT, () => {
-  logger.info(`Server started on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  logger.info(`Server started on http://0.0.0.0:${PORT}`);
   logger.info(`WebSocket server ready for real-time updates`);
   logger.info(`API endpoints:`);
   logger.info(`  GET  /api/prices - All latest prices`);
